@@ -1,6 +1,8 @@
 function getApiUrl(path) {
-  const isSubpath = window.location.pathname.startsWith("/lawrence-hill");
-  return (isSubpath ? "/lawrence-hill" : "") + path;
+  const p = window.location.pathname;
+  if (p.startsWith("/lawrence-hill")) return "/lawrence-hill" + path;
+  if (p.startsWith("/lawrencehill")) return "/lawrencehill" + path;
+  return path;
 }
 
 // Lawrence Hill Luxury Urban Towns — Interaction Controller
