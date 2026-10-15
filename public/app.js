@@ -1,3 +1,8 @@
+function getApiUrl(path) {
+  const isSubpath = window.location.pathname.startsWith("/lawrence-hill");
+  return (isSubpath ? "/lawrence-hill" : "") + path;
+}
+
 // Lawrence Hill Luxury Urban Towns — Interaction Controller
 // Editorial gallery engine, plan inspector, and 2-step tour reservation flow
 
@@ -294,7 +299,7 @@ function initBookingForm() {
     submitBtn.textContent = 'Securing Reservation...';
 
     try {
-      const response = await fetch('/api/leads', {
+      const response = await fetch(getApiUrl('/api/leads'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -1121,7 +1126,7 @@ function initPriceSheetModal() {
       };
 
       try {
-        await fetch("/api/leads", {
+        await fetch(getApiUrl("/api/leads"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
