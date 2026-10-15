@@ -217,6 +217,49 @@ app.get('/api/inventory', (req, res) => {
 });
 
 // Zero-Loss Lead Persistence Endpoint
+// Newsletter Subscription Endpoint
+app.post("/api/newsletter", (req, res) => {
+  try {
+    const { name, email, interests } = req.body;
+
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Valid email address is required." });
+    }
+
+    const subscriberRecord = {
+      id: "sub_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+      timestamp: new Date().toISOString(),
+      fullName: (name || "Anonymous Investor").trim(),
+      email: email.trim().toLowerCase(),
+      type: "NEWSLETTER_SUBSCRIBER",
+      interests: interests || ["Pre-Construction", "Real Estate Investing", "Off-Market Allocations"],
+      source: "Lawrence Hill Investor Newsletter",
+      status: "SUBSCRIBED"
+    };
+
+    let existingLeads = [];
+    try {
+      existingLeads = JSON.parse(fs.readFileSync(LEADS_FILE, "utf8"));
+    } catch (e) {
+      existingLeads = [];
+    }
+
+    existingLeads.push(subscriberRecord);
+    fs.writeFileSync(LEADS_FILE, JSON.stringify(existingLeads, null, 2), "utf8");
+
+    console.log("[Newsletter Subscriber] " + subscriberRecord.fullName + " | " + subscriberRecord.email);
+
+    res.status(201).json({
+      success: true,
+      subscriberId: subscriberRecord.id,
+      message: "Successfully subscribed to the Private Investor & Pre-Construction Briefing."
+    });
+  } catch (err) {
+    console.error("Error recording newsletter subscription:", err);
+    res.status(500).json({ error: "Internal server error processing subscription." });
+  }
+});
+
 app.post('/api/leads', (req, res) => {
   try {
     const {

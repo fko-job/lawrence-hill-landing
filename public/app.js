@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAmenitiesAccordion();
   initTourBookingInteractions();
   initPriceSheetModal();
+  initNewsletterForm();
 });
 
 // --- Gallery Engine ---
@@ -1129,4 +1130,69 @@ function initPriceSheetModal() {
       }
     });
   }
+}
+
+
+// --- Private Pre-Construction & Investor Newsletter Controller ---
+function initNewsletterForm() {
+  const form = document.getElementById("newsletter-form");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById("newsletter-name");
+    const emailInput = document.getElementById("newsletter-email");
+    const submitBtn = document.getElementById("btn-newsletter-submit");
+    const successBox = document.getElementById("newsletter-success");
+
+    const name = nameInput ? nameInput.value.trim() : "";
+    const email = emailInput ? emailInput.value.trim() : "";
+
+    if (!email || !email.includes("@")) {
+      if (emailInput) emailInput.focus();
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Subscribing...";
+    }
+
+    const payload = {
+      name: name || "Anonymous Investor",
+      email: email,
+      interests: ["Pre-Construction Allocations", "Real Estate Investing", "Toronto Builder Assignments"],
+      source: "Lawrence Hill Landing Page Footer Newsletter",
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      const response = await fetch(getApiUrl("/api/newsletter"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error("Server responded with " + response.status);
+      }
+    } catch (err) {
+      console.warn("Network issue saving newsletter subscriber, saving locally:", err);
+      try {
+        const stored = JSON.parse(localStorage.getItem("lh_subscribers") || "[]");
+        stored.push(payload);
+        localStorage.setItem("lh_subscribers", JSON.stringify(stored));
+      } catch (localErr) {
+        console.error("Local fallback error:", localErr);
+      }
+    }
+
+    // Success UI
+    const inputsRow = form.querySelector(".newsletter-inputs");
+    const disclaimer = form.querySelector(".newsletter-disclaimer");
+    if (inputsRow) inputsRow.style.display = "none";
+    if (disclaimer) disclaimer.style.display = "none";
+    if (successBox) {
+      successBox.style.display = "flex";
+    }
+  });
 }

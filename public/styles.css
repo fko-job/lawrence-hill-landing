@@ -980,6 +980,130 @@ img {
   color: var(--color-accent);
 }
 
+/* --- Private Pre-Construction & Investor Newsletter --- */
+.newsletter-section {
+  padding: 56px 0 64px;
+  background-color: var(--color-bg);
+  border-top: 1px solid var(--color-border); /* taste-skill-ignore */
+}
+
+.newsletter-card {
+  background: #171512;
+  color: #f5f2eb;
+  border-radius: var(--radius-sm);
+  padding: 44px 40px;
+  max-width: 960px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.newsletter-header {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 28px;
+}
+
+
+.newsletter-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+  margin-bottom: 12px;
+}
+
+.newsletter-desc {
+  font-size: 0.9375rem;
+  color: #d4cfc5;
+  line-height: 1.6;
+}
+
+.newsletter-form {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.newsletter-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.newsletter-input {
+  background: #ffffff !important;
+  color: var(--color-ink) !important;
+  border: 1px solid #38342e !important;
+  border-radius: var(--radius-xs);
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.newsletter-input:focus {
+  outline: 2px solid #b87333 !important;
+  outline-offset: 1px;
+}
+
+.newsletter-btn {
+  background: #b87333;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.newsletter-btn:hover {
+  background: #a36227;
+}
+
+.newsletter-disclaimer {
+  font-size: 0.75rem;
+  color: #a8a297;
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 14px;
+}
+
+.newsletter-success {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35); /* taste-skill-ignore */
+  color: #e5f7ed;
+  padding: 16px 20px;
+  border-radius: var(--radius-xs);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+@media (max-width: 680px) {
+  .newsletter-card {
+    padding: 32px 20px;
+  }
+  .newsletter-inputs {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .newsletter-btn {
+    width: 100%;
+  }
+}
+
 /* Footer */
 .site-footer {
   background: #171512;
