@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json.bak
+
+# Local runtime & lead persistence
+data/leads.json
+.env
+.env.local
+
+# Temporary scratch & debug scripts
+*.py
+audit_mobile.mjs
+capture_*.mjs
+find_*.mjs
+fix_*.py
+inspect_sections.mjs
+measure_container.mjs
+patch_*.py
+test_*.mjs
+test_*.py
+update_*.py
+scratch*.png
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+extracted_images/
+/assets/

@@ -1,0 +1,23 @@
+services:
+  app:
+    build: .
+    container_name: lawrencehill-staging
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - ./data:/app/data
+    networks:
+      - proxy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy-network"
+      - "traefik.http.routers.lawrencehill.rule=Host(`lawrencehill.jeffreyshew.com`) || Host(`staging-lawrencehill.jeffreyshew.com`)"
+      - "traefik.http.routers.lawrencehill.entrypoints=websecure"
+      - "traefik.http.routers.lawrencehill.tls=true"
+      - "traefik.http.routers.lawrencehill.tls.certresolver=letsencrypt"
+      - "traefik.http.services.lawrencehill.loadbalancer.server.port=3000"
+
+networks:
+  proxy-network:
+    external: true

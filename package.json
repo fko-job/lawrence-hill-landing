@@ -1,0 +1,18 @@
+{
+  "name": "lawrence-hill-landing-page",
+  "version": "1.0.0",
+  "description": "Lawrence Hill Luxury Urban Towns - 20/20 Impeccable Landing Page",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "qa": "node verify-qa.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.6.0"
+  }
+}
