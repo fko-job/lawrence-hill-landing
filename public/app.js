@@ -216,69 +216,29 @@ function initPlanModal() {
   };
 }
 
-// --- 2-Step Tour Booking Form ---
+// --- Direct Contact Form ---
 function initBookingForm() {
-  const form = document.getElementById('lead-submit-form');
-  const step1 = document.getElementById('step-1');
-  const step2 = document.getElementById('step-2');
-  const btnToStep2 = document.getElementById('btn-continue-step1');
-  const btnBackToStep1 = document.getElementById('btn-back-to-step-1');
-  const successBox = document.getElementById('form-success');
+  const form = document.getElementById("lead-submit-form");
+  if (!form) return;
+  const successBox = document.getElementById("form-success");
 
-  const stepLabel = document.getElementById('step-label');
-  const dot1 = document.getElementById('dot-1');
-  const dot2 = document.getElementById('dot-2');
-
-  const tourDateInput = document.getElementById('tour-date');
-  const tourTimeInput = document.getElementById('tour-time');
-
-  // Pre-fill tomorrow as default tour date
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const yyyy = tomorrow.getFullYear();
-  const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-  const dd = String(tomorrow.getDate()).padStart(2, '0');
-  tourDateInput.min = `${yyyy}-${mm}-${dd}`;
-  tourDateInput.value = `${yyyy}-${mm}-${dd}`;
-
-  btnToStep2.addEventListener('click', () => {
-    if (!tourDateInput.value) {
-      tourDateInput.focus();
-      return;
-    }
-    if (!tourTimeInput.value) {
-      tourTimeInput.focus();
-      return;
-    }
-
-    step1.classList.remove('active');
-    step2.classList.add('active');
-    dot1.classList.remove('active');
-    dot2.classList.add('active');
-    stepLabel.textContent = 'Step 2 of 2: Confirm Contact Details';
-    document.getElementById('lead-fullname').focus();
-  });
-
-  btnBackToStep1.addEventListener('click', () => {
-    step2.classList.remove('active');
-    step1.classList.add('active');
-    dot2.classList.remove('active');
-    dot1.classList.add('active');
-    stepLabel.textContent = 'Step 1 of 2: Select Tour Time';
-  });
-
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const name = document.getElementById('lead-fullname').value.trim();
-    const email = document.getElementById('lead-email').value.trim();
-    const phone = document.getElementById('lead-phone').value.trim();
-    const realtorStatus = document.getElementById('buyer-status').value;
-    const tourDate = tourDateInput.value;
-    const tourTime = tourTimeInput.value;
-    const suitePreference = document.getElementById('suite-preference').value;
+    const nameInput = document.getElementById("lead-fullname");
+    const emailInput = document.getElementById("lead-email");
+    const phoneInput = document.getElementById("lead-phone");
+
+    const name = nameInput ? nameInput.value.trim() : "";
+    const email = emailInput ? emailInput.value.trim() : "";
+    const phone = phoneInput ? phoneInput.value.trim() : "";
+    const realtorStatus = document.getElementById("buyer-status") ? document.getElementById("buyer-status").value : "Direct Buyer";
+    const suitePreference = document.getElementById("suite-preference") ? document.getElementById("suite-preference").value : "Model Suite 62";
 
     if (!name || !email || !phone) {
+      if (!name && nameInput) nameInput.focus();
+      else if (!email && emailInput) emailInput.focus();
+      else if (!phone && phoneInput) phoneInput.focus();
       return;
     }
 
@@ -287,47 +247,54 @@ function initBookingForm() {
       email: email,
       phone: phone,
       realtorStatus: realtorStatus,
-      tourDate: tourDate,
-      tourTime: tourTime,
+      tourDate: "2026-10-16",
+      tourTime: "Flexible VIP Appointment",
       suitePreference: suitePreference,
-      source: 'Yolevski Aesthetic Tour Engine',
+      source: "Direct Contact Form",
       timestamp: new Date().toISOString()
     };
 
-    const submitBtn = document.getElementById('btn-submit-lead');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Securing Reservation...';
+    const submitBtn = document.getElementById("btn-submit-lead");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Sending Message...";
+    }
 
     try {
-      const response = await fetch(getApiUrl('/api/leads'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(getApiUrl("/api/leads"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        throw new Error('Server responded with ' + response.status);
+        throw new Error("Server responded with " + response.status);
       }
     } catch (err) {
-      console.warn('Network issue saving lead, storing locally:', err);
+      console.warn("Network issue saving lead, storing locally:", err);
       try {
-        const stored = JSON.parse(localStorage.getItem('lawrence_hill_leads') || '[]');
+        const stored = JSON.parse(localStorage.getItem("lawrence_hill_leads") || "[]");
         stored.push(payload);
-        localStorage.setItem('lawrence_hill_leads', JSON.stringify(stored));
+        localStorage.setItem("lawrence_hill_leads", JSON.stringify(stored));
       } catch (localErr) {
-        console.error('Local storage fallback error:', localErr);
+        console.error("Local storage fallback error:", localErr);
       }
     }
 
     // Display Success
-    step2.classList.remove('active');
-    successBox.classList.add('active');
-    successBox.style.display = 'block';
-    stepLabel.textContent = 'Tour Confirmed';
-    document.getElementById('success-message').innerHTML = `
-      Thank you, <strong>${name}</strong>. Your private viewing for <strong>${tourDate} at ${tourTime}</strong> is tentatively booked.<br><br>
-      Jeffrey Shew, Broker (647-503-2768) will contact you directly to confirm entry access to Model Suite 62 at 73 Curlew Drive.
-    `;
+    const formGroups = form.querySelectorAll(".form-group, #btn-submit-lead");
+    formGroups.forEach(el => el.style.display = "none");
+    if (successBox) {
+      successBox.classList.add("active");
+      successBox.style.display = "block";
+    }
+    const successMsg = document.getElementById("success-message");
+    if (successMsg) {
+      successMsg.innerHTML = `
+        Thank you, <strong>${name}</strong>. Your inquiry has been directly registered.<br><br>
+        Jeffrey Shew, Broker (647-503-2768) will contact you directly to discuss suite allocations and private viewing access to Model Suite 62.
+      `;
+    }
   });
 }
 // --- Mortgage & Monthly Carrying Cost Calculator ---
@@ -1006,9 +973,9 @@ function initTourBookingInteractions() {
     }, 2800);
 
     // 4. Focus tour time select or first interactive input after smooth scroll
-    const timeSelect = document.getElementById("tour-time");
-    if (timeSelect) {
-      setTimeout(() => timeSelect.focus({ preventScroll: true }), 400);
+    const nameInput = document.getElementById("lead-fullname");
+    if (nameInput) {
+      setTimeout(() => nameInput.focus({ preventScroll: true }), 400);
     }
   }
 

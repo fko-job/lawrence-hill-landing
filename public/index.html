@@ -166,7 +166,7 @@
           <span>Jeffrey Shew &middot; Broker (<a href="https://jeffreyshew.com" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">Jeffreyshew.com</a>)</span>
           <a href="tel:16475032768"><strong>647-503-2768</strong></a>
         </div>
-        <a href="#book-tour" class="btn-primary-dark">Schedule Private Tour</a>
+        <a href="#book-tour" class="btn-primary-dark">Contact Me</a>
       </div>
     </div>
   </header>
@@ -936,112 +936,60 @@
       <!-- Right Column: Sticky Tour Booking Sidebar & Contact -->
       <aside class="sticky-sidebar-wrapper" aria-label="Tour Booking & Concierge">
         
-        <!-- Booking Card -->
+        <!-- Contact Card -->
         <div class="booking-card" id="book-tour">
-          <div class="step-indicator">
-            <span id="step-label">Step 1 of 2: Select Tour Time</span>
-            <div class="step-dots">
-              <span class="step-dot active" id="dot-1"></span>
-              <span class="step-dot" id="dot-2"></span>
-            </div>
-          </div>
-
-          <h3 class="booking-title">Tour Model Suite 62</h3>
-          <p class="booking-subtitle">Experience the concrete construction and bespoke finishes in person.</p>
+          <h3 class="booking-title">Contact Jeffrey Shew</h3>
+          <p class="booking-subtitle">Direct broker representation for private Model Suite 62 tours, pricing dossiers, and floor plan allocations.</p>
 
           <form id="lead-submit-form" class="booking-form" novalidate>
-            <!-- Step 1: Interactive Month Calendar Booking Grid -->
-            <div class="form-step active" id="step-1">
-              <div class="calendar-widget" id="booking-calendar">
-                <div class="calendar-nav-bar">
-                  <button type="button" class="calendar-nav-arrow" id="cal-prev-btn" aria-label="Previous month">&lsaquo;</button>
-                  <span class="calendar-current-month" id="cal-month-title">October 2026</span>
-                  <button type="button" class="calendar-nav-arrow" id="cal-next-btn" aria-label="Next month">&rsaquo;</button>
-                </div>
+            <input type="hidden" id="tour-date" name="tourDate" value="2026-10-16">
+            <input type="hidden" id="tour-time" name="tourTime" value="Flexible">
 
-                <div class="calendar-weekdays" aria-hidden="true">
-                  <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-                </div>
-
-                <div class="calendar-days-grid" id="calendar-days-container" role="grid" aria-label="October 2026 tour availability">
-                  <!-- Dynamically rendered day cells with availability dots -->
-                </div>
-
-                <div class="calendar-legend-bar">
-                  <span class="legend-item"><span class="legend-dot legend-dot-avail"></span> Available slot</span>
-                  <span class="legend-item"><span class="legend-dot legend-dot-unavail"></span> Fully booked</span>
-                </div>
-              </div>
-
-              <!-- Hidden input holding selected date for form validation & QA test -->
-              <input type="hidden" id="tour-date" name="tourDate" value="2026-10-16">
-
-              <div class="form-group">
-                <label for="tour-time" class="form-label">Selected Tour Time &middot; Units 62 &amp; 63</label>
-                <select id="tour-time" name="tourTime" class="form-select" required>
-                  <option value="1:00 PM" selected>1:00 PM &ndash; Early Afternoon VIP Tour</option>
-                  <option value="11:00 AM">11:00 AM &ndash; Morning VIP Tour</option>
-                  <option value="3:00 PM">3:00 PM &ndash; Mid Afternoon Acoustic Walkthrough</option>
-                  <option value="5:00 PM">5:00 PM &ndash; Twilight Private Viewing</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="suite-preference" class="form-label">Suite Type of Interest</label>
-                <select id="suite-preference" name="suitePreference" class="form-select">
-                  <option value="2-Bed (781-853 SF)">2 Bedroom Suite (781 &ndash; 853 SF · From $569K)</option>
-                  <option value="3-Bed (1,141-1,196 SF)">3 Bedroom Suite (1,141 &ndash; 1,196 SF · From $649K)</option>
-                  <option value="Both / Undecided">Exploring All Available Inventory</option>
-                </select>
-              </div>
-
-              <button type="button" class="form-btn-full" id="btn-continue-step1">
-                <span>Continue to Private Tour Reservation</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-              </button>
+            <div class="form-group">
+              <label for="lead-fullname" class="form-label">Full Name</label>
+              <input type="text" id="lead-fullname" name="fullName" class="form-input" placeholder="e.g. Eleanor Vance" required autocomplete="name">
             </div>
 
-            <!-- Step 2 -->
-            <div class="form-step" id="step-2">
-              <div class="form-group">
-                <label for="lead-name" class="form-label">Full Name</label>
-                <input type="text" id="lead-fullname" name="fullName" class="form-input" placeholder="e.g. Eleanor Vance" required autocomplete="name">
-              </div>
-
-              <div class="form-group">
-                <label for="lead-email" class="form-label">Email Address</label>
-                <input type="email" id="lead-email" name="email" class="form-input" placeholder="eleanor@example.com" required autocomplete="email">
-              </div>
-
-              <div class="form-group">
-                <label for="lead-phone" class="form-label">Direct Phone Number</label>
-                <input type="tel" id="lead-phone" name="phone" class="form-input" placeholder="(647) 000-0000" required autocomplete="tel">
-              </div>
-
-              <div class="form-group">
-                <label for="buyer-status" class="form-label">Are you working with a Realtor?</label>
-                <select id="buyer-status" name="realtorStatus" class="form-select">
-                  <option value="No Realtor / Direct Buyer">No &ndash; I am inquiring directly</option>
-                  <option value="Working with Realtor">Yes &ndash; I have signed representation</option>
-                  <option value="I am a Licensed Realtor">I am a Licensed Realtor representing a client</option>
-                </select>
-              </div>
-
-              <button type="submit" class="form-btn-full" id="btn-submit-lead">
-                <span>Confirm My Tour Reservation</span>
-              </button>
-
-              <button type="button" class="form-btn-secondary" id="btn-back-to-step-1">
-                Back to Date &amp; Time
-              </button>
+            <div class="form-group">
+              <label for="lead-email" class="form-label">Email Address</label>
+              <input type="email" id="lead-email" name="email" class="form-input" placeholder="eleanor@example.com" required autocomplete="email">
             </div>
+
+            <div class="form-group">
+              <label for="lead-phone" class="form-label">Direct Phone Number</label>
+              <input type="tel" id="lead-phone" name="phone" class="form-input" placeholder="(647) 000-0000" required autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+              <label for="suite-preference" class="form-label">Suite Type of Interest</label>
+              <select id="suite-preference" name="suitePreference" class="form-select">
+                <option value="Model Suite 62 (2 Bed · 781 SF · $569K)" selected>Model Suite 62 &middot; 2 Bed (781 SF &middot; $569K)</option>
+                <option value="2-Bed (781-853 SF)">2 Bedroom Suite (781 &ndash; 853 SF &middot; From $569K)</option>
+                <option value="3-Bed (1,141-1,196 SF)">3 Bedroom Suite (1,141 &ndash; 1,196 SF &middot; From $649K)</option>
+                <option value="Both / Undecided">Exploring All Available Inventory</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="buyer-status" class="form-label">Are you working with a Realtor?</label>
+              <select id="buyer-status" name="realtorStatus" class="form-select">
+                <option value="No Realtor / Direct Buyer">No &ndash; I am inquiring directly</option>
+                <option value="Working with Realtor">Yes &ndash; I have signed representation</option>
+                <option value="I am a Licensed Realtor">I am a Licensed Realtor representing a client</option>
+              </select>
+            </div>
+
+            <button type="submit" class="form-btn-full" id="btn-submit-lead">
+              <span>Contact Me</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
 
             <!-- Success Box -->
             <div class="form-success-box" id="form-success">
               <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              <h4 class="success-title">Your Tour is Reserved</h4>
+              <h4 class="success-title">Inquiry Received</h4>
               <p class="success-text" id="success-message">
-                Thank you. Jeffrey Shew (Broker) will reach out shortly to confirm your private appointment at 73 Curlew Drive, Model Suite 62.
+                Thank you. Jeffrey Shew (Broker) will reach out to you directly shortly regarding Model Suite 62 at 73 Curlew Drive.
               </p>
               <a href="assets/images/floorplan-2bed-781sf.webp" download class="form-btn-secondary" style="display:inline-flex; align-items:center; justify-content:center; gap:8px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -1124,7 +1072,7 @@
       <span>Call Sales</span>
     </a>
     <a href="#book-tour" class="btn-mobile-book">
-      <span>Book Suite Tour</span>
+      <span>Contact Me</span>
     </a>
   </div>
 
