@@ -295,6 +295,14 @@ img {
   object-fit: cover;
   transition: opacity 0.3s ease;
 }
+
+.badge-text-short {
+  display: none;
+}
+.counter-short {
+  display: none;
+}
+
 .gallery-overlay-badge {
   position: absolute;
   top: 16px;
@@ -2821,4 +2829,102 @@ section, .editorial-section, [id], h1, h2, h3 {
 
 .ps-modal-header {
   padding-right: 36px;
+}
+
+  @media (max-width: 768px) {
+  /* Subtle Mobile Gallery Overlays (Clean, Unobstructed Photography) */
+  .gallery-stage {
+    aspect-ratio: 3 / 2 !important;
+  }
+  .badge-text-full {
+    display: none !important;
+  }
+  .badge-text-short {
+    display: inline !important;
+  }
+  .counter-full {
+    display: none !important;
+  }
+  .counter-short {
+    display: inline !important;
+  }
+
+  .gallery-overlay-badge {
+    top: 8px !important;
+    left: 8px !important;
+    padding: 3px 8px !important;
+    font-size: 0.6875rem !important;
+    background: rgba(14, 13, 11, 0.45) !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 20px !important;
+    gap: 4px !important;
+  }
+  .gallery-overlay-badge svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  .gallery-counter-badge {
+    top: 8px !important;
+    right: 8px !important;
+    padding: 3px 8px !important;
+    font-size: 0.6875rem !important;
+    font-weight: 600 !important;
+    background: rgba(14, 13, 11, 0.45) !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 20px !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .gallery-nav-btn {
+    width: 44px !important;
+    height: 44px !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  .gallery-nav-btn svg {
+    width: 30px !important;
+    height: 30px !important;
+    padding: 5px !important;
+    background: rgba(14, 13, 11, 0.4) !important;
+    border-radius: 50% !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+  }
+  .gallery-nav-prev {
+    left: 4px !important;
+  }
+  .gallery-nav-next {
+    right: 4px !important;
+  }
+
+  .gallery-expand-btn {
+    bottom: 8px !important;
+    right: 8px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+  }
+  .gallery-expand-btn span {
+    display: none !important;
+  }
+  .gallery-expand-btn svg {
+    width: 30px !important;
+    height: 30px !important;
+    padding: 6px !important;
+    background: rgba(14, 13, 11, 0.4) !important;
+    border-radius: 50% !important;
+    backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    margin: 0 !important;
+  }
 }

@@ -81,7 +81,14 @@ function initGallery() {
       activeImg.style.opacity = '1';
     }, 120);
 
-    counter.textContent = `Photo ${currentIndex + 1} of ${totalPhotos}`;
+    const counterFull = counter.querySelector(".counter-full");
+    const counterShort = counter.querySelector(".counter-short");
+    if (counterFull && counterShort) {
+      counterFull.textContent = `Photo ${currentIndex + 1} of ${totalPhotos}`;
+      counterShort.textContent = `${currentIndex + 1} / ${totalPhotos}`;
+    } else {
+      counter.textContent = `Photo ${currentIndex + 1} of ${totalPhotos}`;
+    }
 
     // Update Ribbon active state
     const thumbItems = ribbon.querySelectorAll('.thumbnail-item');
@@ -105,7 +112,16 @@ function initGallery() {
   prevBtn.addEventListener('click', () => switchPhoto(currentIndex - 1));
   nextBtn.addEventListener('click', () => switchPhoto(currentIndex + 1));
 
-  // Lightbox Handlers
+  // Lightbox Handlers (button + tap on main image)
+  activeImg.style.cursor = "pointer";
+  activeImg.addEventListener("click", () => {
+    lightboxImg.src = photos[currentIndex].src;
+    lightboxImg.alt = photos[currentIndex].alt;
+    lightboxCaption.textContent = photos[currentIndex].caption;
+    lightbox.classList.add("active");
+    document.body.style.overflow = "hidden";
+  });
+
   openLightboxBtn.addEventListener('click', () => {
     lightboxImg.src = photos[currentIndex].src;
     lightboxImg.alt = photos[currentIndex].alt;
