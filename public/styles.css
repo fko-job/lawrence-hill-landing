@@ -2325,7 +2325,8 @@ img {
 }
 
 .faq-section {
-  margin-top: 10px;
+  padding: 48px 0 56px;
+  border-top: 1px solid var(--color-border); /* taste-skill-ignore */
 }
 .faq-accordion-group {
   display: flex;
