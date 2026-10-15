@@ -123,8 +123,12 @@ async function runImpeccableSuite() {
     const form = document.getElementById('lead-submit-form');
     form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
 
-    await new Promise(r => setTimeout(r, 800));
-
+    // Wait for success box display
+    for (let i = 0; i < 30; i++) {
+      const box = document.getElementById('form-success');
+      if (box && window.getComputedStyle(box).display !== 'none') break;
+      await new Promise(r => setTimeout(r, 100));
+    }
     const successBox = document.getElementById('form-success');
     const isSuccessVisible = successBox && window.getComputedStyle(successBox).display !== 'none';
 
