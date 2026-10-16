@@ -237,6 +237,8 @@ function initBookingForm() {
     const phone = phoneInput ? phoneInput.value.trim() : "";
     const realtorStatus = document.getElementById("buyer-status") ? document.getElementById("buyer-status").value : "Direct Buyer";
     const suitePreference = document.getElementById("suite-preference") ? document.getElementById("suite-preference").value : "Model Suite 62";
+    const newsletterOptin = document.getElementById("lead-newsletter-optin");
+    const subscribeNewsletter = newsletterOptin ? Boolean(newsletterOptin.checked) : false;
 
     if (!name || !email || !phone) {
       if (!name && nameInput) nameInput.focus();
@@ -253,6 +255,8 @@ function initBookingForm() {
       tourDate: "2026-10-16",
       tourTime: "Flexible VIP Appointment",
       suitePreference: suitePreference,
+      suiteInterest: suitePreference,
+      subscribeNewsletter: subscribeNewsletter,
       source: "Direct Contact Form",
       timestamp: new Date().toISOString()
     };
@@ -293,9 +297,13 @@ function initBookingForm() {
     }
     const successMsg = document.getElementById("success-message");
     if (successMsg) {
+      const newsletterNote = subscribeNewsletter
+        ? `<div style="margin-top: 12px; font-size: 0.8125rem; color: #575249; background: #f6f3ee; padding: 10px 14px; border-radius: 4px; border-left: 3px solid #b87333;">You have also been subscribed to Jeffrey Shew's Private Pre-Construction &amp; Investor Briefing.</div>`
+        : '';
       successMsg.innerHTML = `
         Thank you, <strong>${name}</strong>. Your inquiry has been directly registered.<br><br>
         Jeffrey Shew, Broker (647-503-2768) will contact you directly to discuss suite allocations and private viewing access to Model Suite 62.
+        ${newsletterNote}
       `;
     }
   });

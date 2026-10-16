@@ -216,6 +216,52 @@ app.get('/api/inventory', (req, res) => {
   res.json(INVENTORY);
 });
 
+// --- Follow Up Boss CRM Integration ---
+const FUB_ENDPOINT = process.env.FUB_ENDPOINT || 'https://api.followupboss.com/v1/events';
+const FUB_API_KEY = process.env.FUB_API_KEY || 'fka_0qYWVXJLuT1EnjtUW96DGM44eZpU94xGkN';
+const FUB_SYSTEM = process.env.FUB_SYSTEM || 'jeffreyshew-website';
+const FUB_ASSIGNED_USER_ID = process.env.FUB_ASSIGNED_USER_ID ? Number(process.env.FUB_ASSIGNED_USER_ID) : 1;
+const FUB_ASSIGNED_TO = process.env.FUB_ASSIGNED_TO || 'Jeffrey Shew';
+
+async function postToFub(eventData) {
+  if (!FUB_API_KEY) {
+    console.warn('[Follow Up Boss] FUB_API_KEY not configured, skipping CRM sync.');
+    return { skipped: true };
+  }
+
+  const auth = Buffer.from(`${FUB_API_KEY}:`).toString('base64');
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Authorization': `Basic ${auth}`,
+    'X-System': FUB_SYSTEM
+  };
+  if (process.env.FUB_SYSTEM_KEY) {
+    headers['X-System-Key'] = process.env.FUB_SYSTEM_KEY;
+  }
+
+  try {
+    const res = await fetch(FUB_ENDPOINT, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(eventData)
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error(`[Follow Up Boss] Error (${res.status}): ${errText.slice(0, 300)}`);
+      return { success: false, status: res.status, error: errText };
+    }
+
+    const data = await res.json().catch(() => ({}));
+    console.log(`[Follow Up Boss] Event synced: ${eventData.person?.emails?.[0]?.value} | Tags: ${(eventData.person?.tags || []).join(', ')}`);
+    return { success: true, data };
+  } catch (err) {
+    console.error('[Follow Up Boss] Network/Dispatch error:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 // Zero-Loss Lead Persistence Endpoint
 // Newsletter Subscription Endpoint
 app.post("/api/newsletter", (req, res) => {
@@ -249,6 +295,32 @@ app.post("/api/newsletter", (req, res) => {
 
     console.log("[Newsletter Subscriber] " + subscriberRecord.fullName + " | " + subscriberRecord.email);
 
+    // Sync with Follow Up Boss
+    const nameParts = (name || "Subscriber").trim().split(/\s+/);
+    const firstName = nameParts[0] || "Subscriber";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    const fubPayload = {
+      source: "Lawrence Hill Urban Towns Landing Page",
+      system: FUB_SYSTEM,
+      type: "Registration",
+      message: `Newsletter Subscription: Private Investor Briefing · Interests: ${(interests || []).join(", ") || "Pre-Construction, Investing"}`,
+      description: "Subscribed to Jeffrey Shew's Private Pre-Construction & Investor Briefing",
+      pageUrl: "https://staging.jeffreyshew.com/lawrence-hill/",
+      person: {
+        firstName,
+        lastName,
+        emails: [{ value: email.trim().toLowerCase(), type: "home" }],
+        assignedUserId: FUB_ASSIGNED_USER_ID,
+        assignedTo: FUB_ASSIGNED_TO,
+        tags: ["Lawrence Hill", "Newsletter Subscriber", "Weekly-Newsletter-Updates", "Investor Briefing"]
+      }
+    };
+
+    postToFub(fubPayload).catch(err => {
+      console.error("[Follow Up Boss] Newsletter dispatch error:", err);
+    });
+
     res.status(201).json({
       success: true,
       subscriberId: subscriberRecord.id,
@@ -267,16 +339,31 @@ app.post('/api/leads', (req, res) => {
       email,
       phone,
       suiteInterest,
+      suitePreference,
+      realtorStatus,
       timeline,
       buyerType,
       preferredTourDate,
       requestPDI,
       requestIncentives,
-      notes
+      notes,
+      subscribeNewsletter
     } = req.body;
 
     if (!fullName || !email || !phone) {
       return res.status(400).json({ error: 'Missing required contact details (Name, Email, Phone).' });
+    }
+
+    const chosenSuite = suitePreference || suiteInterest || 'Model Suite 62 (2 Bed · 781 SF · $569K)';
+    const isSubscribedNewsletter = Boolean(subscribeNewsletter);
+
+    // Follow Up Boss Tags:
+    // Base inquiry tags:
+    const tags = ['Lawrence Hill', 'VIP Tour Inquiry'];
+    
+    // Tag identifying newsletter subscription:
+    if (isSubscribedNewsletter) {
+      tags.push('Newsletter Subscriber', 'Weekly-Newsletter-Updates');
     }
 
     const leadRecord = {
@@ -285,12 +372,15 @@ app.post('/api/leads', (req, res) => {
       fullName: fullName.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
-      suiteInterest: suiteInterest || '2 Bed (Starting Mid $500Ks)',
+      suiteInterest: chosenSuite,
+      realtorStatus: realtorStatus || 'No Realtor / Direct Buyer',
       timeline: timeline || '30–90 Days',
       buyerType: buyerType || 'End-User / First-Time Buyer',
       preferredTourDate: preferredTourDate || 'Flexible / Weekend',
       requestPDI: Boolean(requestPDI),
       requestIncentives: Boolean(requestIncentives),
+      subscribeNewsletter: isSubscribedNewsletter,
+      tags: tags,
       notes: (notes || '').trim(),
       depositStructure: '5% on Signing',
       closingWindow: '30 to 90 Days',
@@ -310,11 +400,42 @@ app.post('/api/leads', (req, res) => {
     existingLeads.push(leadRecord);
     fs.writeFileSync(LEADS_FILE, JSON.stringify(existingLeads, null, 2), 'utf8');
 
-    console.log(`[Lead Captured] Lead ID: ${leadRecord.id} | ${leadRecord.fullName} | ${leadRecord.email}`);
+    console.log(`[Lead Captured] Lead ID: ${leadRecord.id} | ${leadRecord.fullName} | ${leadRecord.email} | Newsletter: ${isSubscribedNewsletter} | Tags: ${tags.join(', ')}`);
+
+    // Parse names for Follow Up Boss
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || 'Inquirer';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Build FUB Event payload
+    const fubPayload = {
+      source: 'Lawrence Hill Urban Towns Landing Page',
+      system: FUB_SYSTEM,
+      type: 'Property Inquiry',
+      message: `Suite Interest: ${chosenSuite} · Realtor Status: ${realtorStatus || 'Direct Buyer'} · Newsletter: ${isSubscribedNewsletter ? 'Subscribed' : 'No'}`,
+      description: `Lawrence Hill VIP Inquiry · Model Suite 62 · ${isSubscribedNewsletter ? 'Subscribed to Newsletter' : 'Standard Inquiry'}`,
+      pageUrl: 'https://staging.jeffreyshew.com/lawrence-hill/',
+      person: {
+        firstName,
+        lastName,
+        emails: [{ value: email.trim().toLowerCase(), type: 'home' }],
+        phones: [{ value: phone.trim(), type: 'home' }],
+        assignedUserId: FUB_ASSIGNED_USER_ID,
+        assignedTo: FUB_ASSIGNED_TO,
+        tags
+      }
+    };
+
+    // Dispatch asynchronously to Follow Up Boss without delaying client response
+    postToFub(fubPayload).catch(err => {
+      console.error('[Follow Up Boss] Background post error:', err);
+    });
 
     return res.status(201).json({
       success: true,
       leadId: leadRecord.id,
+      subscribedNewsletter: isSubscribedNewsletter,
+      tags: tags,
       message: 'Your VIP allocation request and private tour inquiry has been securely registered.',
       details: {
         modelSuiteAddress: '73 Curlew Dr, Units 62 & 63, North York',
