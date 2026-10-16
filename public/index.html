@@ -1264,6 +1264,115 @@
     </div>
   </div>
 
+  <!-- Open House Guest Sign-In Modal (Revealed via QR Code URL ?openhouse=true) -->
+  <div class="openhouse-modal" id="openhouse-modal" role="dialog" aria-modal="true" aria-labelledby="oh-modal-title" data-ui style="display: none;">
+    <div class="openhouse-modal-backdrop" id="openhouse-backdrop"></div>
+    <div class="openhouse-modal-card" data-ui>
+      <button type="button" class="openhouse-modal-close" id="oh-modal-close-btn" aria-label="Close Open House Form">&times;</button>
+
+      <div id="oh-form-view">
+        <div class="oh-modal-header">
+          <div class="oh-badge">
+            <span class="oh-badge-dot"></span>
+            <span>Open House Guest Sign-In &middot; Model Suite 62</span>
+          </div>
+          <h2 id="oh-modal-title" class="oh-modal-title">Welcome to Lawrence Hill Urban Towns</h2>
+          <p class="oh-modal-subtitle">
+            73 Curlew Drive &middot; Model Suite 62 &middot; Please register your visit below for direct developer pricing, private allocations, and instant floor plan access.
+          </p>
+        </div>
+
+        <form id="openhouse-submit-form" class="oh-form" novalidate>
+          <div class="oh-form-row">
+            <div class="form-group">
+              <label for="oh-first-name" class="form-label">First Name</label>
+              <input type="text" id="oh-first-name" name="firstName" class="form-input" placeholder="e.g. Eleanor" required autocomplete="given-name">
+            </div>
+            <div class="form-group">
+              <label for="oh-last-name" class="form-label">Last Name</label>
+              <input type="text" id="oh-last-name" name="lastName" class="form-input" placeholder="e.g. Vance" required autocomplete="family-name">
+            </div>
+          </div>
+
+          <div class="oh-form-row">
+            <div class="form-group">
+              <label for="oh-phone" class="form-label">Phone Number</label>
+              <input type="tel" id="oh-phone" name="phone" class="form-input" placeholder="e.g. (647) 000-0000" required autocomplete="tel">
+            </div>
+            <div class="form-group">
+              <label for="oh-email" class="form-label">Email Address</label>
+              <input type="email" id="oh-email" name="email" class="form-input" placeholder="e.g. eleanor@example.com" required autocomplete="email">
+            </div>
+          </div>
+
+          <div class="oh-form-row">
+            <div class="form-group">
+              <label for="oh-realtor-status" class="form-label">Are you working with a Realtor?</label>
+              <select id="oh-realtor-status" name="realtorStatus" class="form-select">
+                <option value="No Realtor / Direct Buyer" selected>No &ndash; Inquiring directly as a buyer</option>
+                <option value="Working with Realtor">Yes &ndash; Signed representation agreement</option>
+                <option value="I am a Licensed Realtor">I am a Licensed Realtor attending</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="oh-budget-range" class="form-label">Budget Range</label>
+              <select id="oh-budget-range" name="budgetRange" class="form-select">
+                <option value="$550,000 – $600,000 (Model Suite 62 / 2-Bed)" selected>$550K &ndash; $600K (Model Suite 62 / 2-Bed)</option>
+                <option value="$600,000 – $660,000 (2 & 3 Bed Courtyard)">$600K &ndash; $660K (2 &amp; 3 Bed Courtyard)</option>
+                <option value="$660,000 – $720,000+ (Upper Rooftop Terraces)">$660K &ndash; $720K+ (Upper Rooftop Terraces)</option>
+                <option value="Exploring All Inventory / Investor">Exploring All Inventory / Flexible</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Add to Newsletter Checkbox -->
+          <div class="form-group form-checkbox-group">
+            <label for="oh-newsletter-optin" class="form-checkbox-label">
+              <input type="checkbox" id="oh-newsletter-optin" name="subscribeNewsletter" class="form-checkbox-input" checked>
+              <span class="form-checkbox-text">
+                Subscribe to Jeffrey Shew's Private Pre-Construction &amp; Investor Briefing (confidential releases, pricing dossiers &amp; market intelligence).
+              </span>
+            </label>
+          </div>
+
+          <button type="submit" class="form-btn-full" id="btn-submit-openhouse">
+            <span>Complete Sign-In &amp; Access Floor Plans</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+
+          <p class="oh-fiduciary-note">
+            Hosted by Jeffrey Shew, Broker &middot; Direct representation for 73 Curlew Drive Model Suite 62. Instant digital brochure delivered upon sign-in.
+          </p>
+        </form>
+      </div>
+
+      <!-- Success View -->
+      <div id="oh-success-view" style="display: none; text-align: center; padding: 16px 8px;">
+        <div class="oh-success-icon-wrap">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h3 class="oh-success-title">Welcome to Model Suite 62!</h3>
+        <p class="oh-success-desc" id="oh-success-desc">
+          Thank you for signing in. You now have full access to the digital floor plan package, builder pricing, and deposit schedules for Lawrence Hill Urban Towns.
+        </p>
+
+        <a href="assets/images/floorplan-2bed-781sf.webp" download class="btn-primary-dark oh-download-btn" id="oh-download-floorplans" style="display: inline-flex; width: 100%; justify-content: center; align-items: center; gap: 10px; padding: 14px 20px; font-size: 0.95rem; text-decoration: none; margin-bottom: 12px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Download Model Suite 62 Floor Plan Package</span>
+        </a>
+
+        <a href="assets/Lawrence-Hill-Price-List-Incentive.pdf" download="Lawrence-Hill-Price-List-Incentive.pdf" class="btn-secondary-light" style="display: inline-flex; width: 100%; justify-content: center; align-items: center; gap: 8px; padding: 12px 18px; font-size: 0.9rem; text-decoration: none; margin-bottom: 16px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>Download Developer Price Sheet &amp; Incentives (PDF)</span>
+        </a>
+
+        <button type="button" class="btn-text-subtle" id="oh-explore-landing-btn" style="background: none; border: none; color: var(--color-ink-muted); font-size: 0.85rem; cursor: pointer; text-decoration: underline; padding: 8px;">
+          Explore Complete Model Suite 62 Gallery &amp; Specifications &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="assets/vendor/leaflet.js"></script>
   <script src="app.js"></script>
 </body>

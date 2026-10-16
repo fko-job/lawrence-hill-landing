@@ -336,30 +336,45 @@ app.post('/api/leads', (req, res) => {
   try {
     const {
       fullName,
+      firstName: inputFirstName,
+      lastName: inputLastName,
       email,
       phone,
       suiteInterest,
       suitePreference,
       realtorStatus,
+      budgetRange,
       timeline,
       buyerType,
       preferredTourDate,
       requestPDI,
       requestIncentives,
       notes,
-      subscribeNewsletter
+      subscribeNewsletter,
+      isOpenHouse,
+      source
     } = req.body;
 
-    if (!fullName || !email || !phone) {
+    const resolvedFullName = (fullName || `${inputFirstName || ''} ${inputLastName || ''}`).trim();
+
+    if (!resolvedFullName || !email || !phone) {
       return res.status(400).json({ error: 'Missing required contact details (Name, Email, Phone).' });
     }
 
+    const isOH = Boolean(isOpenHouse) || (source && source.includes('Open House'));
     const chosenSuite = suitePreference || suiteInterest || 'Model Suite 62 (2 Bed · 781 SF · $569K)';
     const isSubscribedNewsletter = Boolean(subscribeNewsletter);
 
     // Follow Up Boss Tags:
-    // Base inquiry tags:
-    const tags = ['Lawrence Hill', 'VIP Tour Inquiry'];
+    let tags = [];
+    if (isOH) {
+      tags = ['Lawrence Hill', 'Open House Attendee', 'Model Suite 62'];
+      if (realtorStatus && (realtorStatus.includes('Licensed Realtor') || realtorStatus.includes('representation'))) {
+        tags.push('Realtor-Represented');
+      }
+    } else {
+      tags = ['Lawrence Hill', 'VIP Tour Inquiry'];
+    }
     
     // Tag identifying newsletter subscription:
     if (isSubscribedNewsletter) {
@@ -369,23 +384,26 @@ app.post('/api/leads', (req, res) => {
     const leadRecord = {
       id: `lead_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       timestamp: new Date().toISOString(),
-      fullName: fullName.trim(),
+      fullName: resolvedFullName,
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
       suiteInterest: chosenSuite,
       realtorStatus: realtorStatus || 'No Realtor / Direct Buyer',
+      budgetRange: budgetRange || null,
       timeline: timeline || '30–90 Days',
-      buyerType: buyerType || 'End-User / First-Time Buyer',
-      preferredTourDate: preferredTourDate || 'Flexible / Weekend',
+      buyerType: buyerType || (isOH ? 'Open House Visitor' : 'End-User / First-Time Buyer'),
+      preferredTourDate: preferredTourDate || (isOH ? 'Open House Today' : 'Flexible / Weekend'),
       requestPDI: Boolean(requestPDI),
       requestIncentives: Boolean(requestIncentives),
       subscribeNewsletter: isSubscribedNewsletter,
+      isOpenHouse: isOH,
+      source: source || (isOH ? 'Open House QR Check-In' : 'Direct Contact Form'),
       tags: tags,
       notes: (notes || '').trim(),
       depositStructure: '5% on Signing',
       closingWindow: '30 to 90 Days',
       modelSuiteLocation: '73 Curlew Dr, Units 62 & 63',
-      status: 'NEW_VIP_INQUIRY'
+      status: isOH ? 'OPEN_HOUSE_SIGNIN' : 'NEW_VIP_INQUIRY'
     };
 
     // Durable atomic append to leads.json
@@ -400,21 +418,29 @@ app.post('/api/leads', (req, res) => {
     existingLeads.push(leadRecord);
     fs.writeFileSync(LEADS_FILE, JSON.stringify(existingLeads, null, 2), 'utf8');
 
-    console.log(`[Lead Captured] Lead ID: ${leadRecord.id} | ${leadRecord.fullName} | ${leadRecord.email} | Newsletter: ${isSubscribedNewsletter} | Tags: ${tags.join(', ')}`);
+    console.log(`[Lead Captured] ID: ${leadRecord.id} | ${leadRecord.fullName} | ${leadRecord.email} | OpenHouse: ${isOH} | Newsletter: ${isSubscribedNewsletter} | Tags: ${tags.join(', ')}`);
 
     // Parse names for Follow Up Boss
-    const nameParts = fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] || 'Inquirer';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    let firstName = inputFirstName ? inputFirstName.trim() : '';
+    let lastName = inputLastName ? inputLastName.trim() : '';
+    if (!firstName) {
+      const nameParts = resolvedFullName.split(/\s+/);
+      firstName = nameParts[0] || 'Guest';
+      lastName = nameParts.slice(1).join(' ') || '';
+    }
 
     // Build FUB Event payload
     const fubPayload = {
-      source: 'Lawrence Hill Urban Towns Landing Page',
+      source: isOH ? 'Lawrence Hill Open House' : 'Lawrence Hill Urban Towns Landing Page',
       system: FUB_SYSTEM,
-      type: 'Property Inquiry',
-      message: `Suite Interest: ${chosenSuite} · Realtor Status: ${realtorStatus || 'Direct Buyer'} · Newsletter: ${isSubscribedNewsletter ? 'Subscribed' : 'No'}`,
-      description: `Lawrence Hill VIP Inquiry · Model Suite 62 · ${isSubscribedNewsletter ? 'Subscribed to Newsletter' : 'Standard Inquiry'}`,
-      pageUrl: 'https://staging.jeffreyshew.com/lawrence-hill/',
+      type: isOH ? 'Open House Registration' : 'Property Inquiry',
+      message: isOH 
+        ? `Open House Guest · Model Suite 62 · Budget: ${budgetRange || 'Not Specified'} · Realtor Status: ${realtorStatus || 'Direct Buyer'} · Newsletter: ${isSubscribedNewsletter ? 'Yes' : 'No'}`
+        : `Suite Interest: ${chosenSuite} · Realtor Status: ${realtorStatus || 'Direct Buyer'} · Newsletter: ${isSubscribedNewsletter ? 'Subscribed' : 'No'}`,
+      description: isOH
+        ? `Lawrence Hill Open House Check-In (Model Suite 62 · 73 Curlew Dr) · Budget: ${budgetRange || 'Flexible'} · ${isSubscribedNewsletter ? 'Newsletter Subscribed' : 'Guest Sign-In'}`
+        : `Lawrence Hill VIP Inquiry · Model Suite 62 · ${isSubscribedNewsletter ? 'Subscribed to Newsletter' : 'Standard Inquiry'}`,
+      pageUrl: 'https://staging.jeffreyshew.com/lawrence-hill/' + (isOH ? '?openhouse=true' : ''),
       person: {
         firstName,
         lastName,
@@ -434,9 +460,10 @@ app.post('/api/leads', (req, res) => {
     return res.status(201).json({
       success: true,
       leadId: leadRecord.id,
+      isOpenHouse: isOH,
       subscribedNewsletter: isSubscribedNewsletter,
       tags: tags,
-      message: 'Your VIP allocation request and private tour inquiry has been securely registered.',
+      message: isOH ? 'Open House sign-in registered. Welcome to Model Suite 62!' : 'Your VIP allocation request and private tour inquiry has been securely registered.',
       details: {
         modelSuiteAddress: '73 Curlew Dr, Units 62 & 63, North York',
         deposit: '5% on Signing',

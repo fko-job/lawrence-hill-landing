@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTourBookingInteractions();
   initPriceSheetModal();
   initNewsletterForm();
+  initOpenHouseSign();
 });
 
 // --- Gallery Engine ---
@@ -1203,4 +1204,121 @@ function initNewsletterForm() {
       successBox.style.display = "flex";
     }
   });
+}
+
+
+// --- Open House Guest Sign-In Experience (Activated by QR Code ?openhouse=true) ---
+function initOpenHouseSign() {
+  const modal = document.getElementById("openhouse-modal");
+  if (!modal) return;
+
+  const closeBtn = document.getElementById("oh-modal-close-btn");
+  const backdrop = document.getElementById("openhouse-backdrop");
+  const form = document.getElementById("openhouse-submit-form");
+  const exploreBtn = document.getElementById("oh-explore-landing-btn");
+
+  function openOpenHouse() {
+    modal.style.display = "flex";
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeOpenHouse() {
+    modal.style.display = "none";
+    modal.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  if (closeBtn) closeBtn.addEventListener("click", closeOpenHouse);
+  if (backdrop) backdrop.addEventListener("click", closeOpenHouse);
+  if (exploreBtn) exploreBtn.addEventListener("click", closeOpenHouse);
+
+  // Activate via URL parameter: ?openhouse=true, ?openhouse=1, or hash #open-house
+  const searchParams = new URLSearchParams(window.location.search);
+  const isOhParam = searchParams.get("openhouse") === "true" || searchParams.get("openhouse") === "1" || searchParams.has("openhouse");
+  const isOhHash = window.location.hash === "#open-house" || window.location.hash === "#openhouse";
+
+  if (isOhParam || isOhHash) {
+    setTimeout(openOpenHouse, 120);
+  }
+
+  // Handle Form Submission
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const firstName = (document.getElementById("oh-first-name")?.value || "").trim();
+      const lastName = (document.getElementById("oh-last-name")?.value || "").trim();
+      const phone = (document.getElementById("oh-phone")?.value || "").trim();
+      const email = (document.getElementById("oh-email")?.value || "").trim();
+      const realtorStatus = document.getElementById("oh-realtor-status")?.value || "No Realtor / Direct Buyer";
+      const budgetRange = document.getElementById("oh-budget-range")?.value || "$550,000 – $600,000";
+      const newsletterOptin = document.getElementById("oh-newsletter-optin");
+      const subscribeNewsletter = newsletterOptin ? Boolean(newsletterOptin.checked) : false;
+
+      if (!firstName || !lastName || !phone || !email) {
+        if (!firstName) document.getElementById("oh-first-name")?.focus();
+        else if (!lastName) document.getElementById("oh-last-name")?.focus();
+        else if (!phone) document.getElementById("oh-phone")?.focus();
+        else if (!email) document.getElementById("oh-email")?.focus();
+        return;
+      }
+
+      const submitBtn = document.getElementById("btn-submit-openhouse");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Registering Sign-In...";
+      }
+
+      const fullName = `${firstName} ${lastName}`.trim();
+      const payload = {
+        firstName,
+        lastName,
+        fullName,
+        email,
+        phone,
+        realtorStatus,
+        budgetRange,
+        suitePreference: "Model Suite 62",
+        suiteInterest: `Open House Sign-In (Budget: ${budgetRange})`,
+        subscribeNewsletter,
+        isOpenHouse: true,
+        source: "Open House QR Check-In",
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        const response = await fetch(getApiUrl("/api/leads"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+          throw new Error("Server responded with " + response.status);
+        }
+      } catch (err) {
+        console.warn("Network issue saving open house lead, storing locally:", err);
+        try {
+          const stored = JSON.parse(localStorage.getItem("lawrence_hill_leads") || "[]");
+          stored.push(payload);
+          localStorage.setItem("lawrence_hill_leads", JSON.stringify(stored));
+        } catch (localErr) {
+          console.error("Local storage fallback error:", localErr);
+        }
+      }
+
+      // Switch to Success View
+      const formView = document.getElementById("oh-form-view");
+      const successView = document.getElementById("oh-success-view");
+      if (formView) formView.style.display = "none";
+      if (successView) {
+        successView.style.display = "block";
+        const desc = document.getElementById("oh-success-desc");
+        if (desc) {
+          const nlText = subscribeNewsletter ? "<br><span style='display:inline-block; margin-top:8px; font-size:0.8125rem; color:#575249; background:#f6f3ee; padding:6px 12px; border-radius:4px;'>You are also subscribed to Jeffrey Shew's Private Investor Briefing.</span>" : "";
+          desc.innerHTML = `Welcome to Model Suite 62, <strong>${firstName} ${lastName}</strong>. Your check-in has been registered with broker Jeffrey Shew.${nlText}`;
+        }
+      }
+    });
+  }
 }
