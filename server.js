@@ -369,11 +369,20 @@ app.post('/api/leads', (req, res) => {
     let tags = [];
     if (isOH) {
       tags = ['Lawrence Hill', 'Open House Attendee', 'Model Suite 62'];
-      if (realtorStatus && (realtorStatus.includes('Licensed Realtor') || realtorStatus.includes('representation'))) {
+      if (timeline) {
+        tags.push(`Timeline: ${timeline}`);
+        if (timeline.includes('Immediate')) {
+          tags.push('Immediate Buyer');
+        }
+      }
+      if (realtorStatus && (realtorStatus.includes('Licensed Realtor') || realtorStatus.includes('representation') || realtorStatus.includes('Realtor'))) {
         tags.push('Realtor-Represented');
       }
     } else {
       tags = ['Lawrence Hill', 'VIP Tour Inquiry'];
+      if (timeline) {
+        tags.push(`Timeline: ${timeline}`);
+      }
     }
     
     // Tag identifying newsletter subscription:
@@ -429,27 +438,41 @@ app.post('/api/leads', (req, res) => {
       lastName = nameParts.slice(1).join(' ') || '';
     }
 
+    // Follow Up Boss Timeframe mapping
+    const TIMELINE_TO_TIMEFRAME_ID = {
+      'Immediate (30–90 Days)': 1,
+      '3 to 6 Months': 2,
+      '6 to 12+ Months': 3,
+      'Curious Neighbour / Just Browsing': 5
+    };
+    const timeframeId = timeline ? TIMELINE_TO_TIMEFRAME_ID[timeline] : (isOH ? 1 : undefined);
+
+    const personObj = {
+      firstName,
+      lastName,
+      emails: [{ value: email.trim().toLowerCase(), type: 'home' }],
+      phones: [{ value: phone.trim(), type: 'home' }],
+      assignedUserId: FUB_ASSIGNED_USER_ID,
+      assignedTo: FUB_ASSIGNED_TO,
+      tags
+    };
+    if (timeframeId) {
+      personObj.timeframeId = timeframeId;
+    }
+
     // Build FUB Event payload
     const fubPayload = {
       source: isOH ? 'Lawrence Hill Open House' : 'Lawrence Hill Urban Towns Landing Page',
       system: FUB_SYSTEM,
       type: isOH ? 'Open House Registration' : 'Property Inquiry',
       message: isOH 
-        ? `Open House Guest · Model Suite 62 · Budget: ${budgetRange || 'Not Specified'} · Realtor Status: ${realtorStatus || 'Direct Buyer'} · Newsletter: ${isSubscribedNewsletter ? 'Yes' : 'No'}`
+        ? `Open House Guest · Model Suite 62 · Timeline: ${timeline || 'Immediate'} · Budget: ${budgetRange || 'Not Specified'} · Realtor Status: ${realtorStatus || 'Direct Buyer'} · Newsletter: ${isSubscribedNewsletter ? 'Yes' : 'No'}`
         : `Suite Interest: ${chosenSuite} · Realtor Status: ${realtorStatus || 'Direct Buyer'} · Newsletter: ${isSubscribedNewsletter ? 'Subscribed' : 'No'}`,
       description: isOH
-        ? `Lawrence Hill Open House Check-In (Model Suite 62 · 73 Curlew Dr) · Budget: ${budgetRange || 'Flexible'} · ${isSubscribedNewsletter ? 'Newsletter Subscribed' : 'Guest Sign-In'}`
+        ? `Lawrence Hill Open House Check-In (Model Suite 62 · 73 Curlew Dr) · Timeline: ${timeline || 'Immediate'} · Budget: ${budgetRange || 'Flexible'} · ${isSubscribedNewsletter ? 'Newsletter Subscribed' : 'Guest Sign-In'}`
         : `Lawrence Hill VIP Inquiry · Model Suite 62 · ${isSubscribedNewsletter ? 'Subscribed to Newsletter' : 'Standard Inquiry'}`,
       pageUrl: 'https://staging.jeffreyshew.com/lawrence-hill/' + (isOH ? '?openhouse=true' : ''),
-      person: {
-        firstName,
-        lastName,
-        emails: [{ value: email.trim().toLowerCase(), type: 'home' }],
-        phones: [{ value: phone.trim(), type: 'home' }],
-        assignedUserId: FUB_ASSIGNED_USER_ID,
-        assignedTo: FUB_ASSIGNED_TO,
-        tags
-      }
+      person: personObj
     };
 
     // Dispatch asynchronously to Follow Up Boss without delaying client response

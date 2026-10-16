@@ -1207,15 +1207,14 @@ function initNewsletterForm() {
 }
 
 
-// --- Open House Guest Sign-In Experience (Activated by QR Code ?openhouse=true) ---
+// --- Open House Guest Sign-In Experience (Hard-Gated on ?openhouse=true) ---
 function initOpenHouseSign() {
   const modal = document.getElementById("openhouse-modal");
   if (!modal) return;
 
-  const closeBtn = document.getElementById("oh-modal-close-btn");
-  const backdrop = document.getElementById("openhouse-backdrop");
   const form = document.getElementById("openhouse-submit-form");
   const exploreBtn = document.getElementById("oh-explore-landing-btn");
+  const successCloseBtn = document.getElementById("oh-success-close-btn");
 
   function openOpenHouse() {
     modal.style.display = "flex";
@@ -1229,9 +1228,9 @@ function initOpenHouseSign() {
     document.body.style.overflow = "";
   }
 
-  if (closeBtn) closeBtn.addEventListener("click", closeOpenHouse);
-  if (backdrop) backdrop.addEventListener("click", closeOpenHouse);
+  // Dismissal is ONLY allowed after registration on the success screen
   if (exploreBtn) exploreBtn.addEventListener("click", closeOpenHouse);
+  if (successCloseBtn) successCloseBtn.addEventListener("click", closeOpenHouse);
 
   // Activate via URL parameter: ?openhouse=true, ?openhouse=1, or hash #open-house
   const searchParams = new URLSearchParams(window.location.search);
@@ -1251,8 +1250,9 @@ function initOpenHouseSign() {
       const lastName = (document.getElementById("oh-last-name")?.value || "").trim();
       const phone = (document.getElementById("oh-phone")?.value || "").trim();
       const email = (document.getElementById("oh-email")?.value || "").trim();
-      const realtorStatus = document.getElementById("oh-realtor-status")?.value || "No Realtor / Direct Buyer";
+      const timeline = document.getElementById("oh-timeline")?.value || "Immediate (30–90 Days)";
       const budgetRange = document.getElementById("oh-budget-range")?.value || "$550,000 – $600,000";
+      const realtorStatus = document.getElementById("oh-realtor-status")?.value || "No Realtor / Direct Buyer";
       const newsletterOptin = document.getElementById("oh-newsletter-optin");
       const subscribeNewsletter = newsletterOptin ? Boolean(newsletterOptin.checked) : false;
 
@@ -1267,7 +1267,7 @@ function initOpenHouseSign() {
       const submitBtn = document.getElementById("btn-submit-openhouse");
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = "Registering Sign-In...";
+        submitBtn.textContent = "Unlocking Access...";
       }
 
       const fullName = `${firstName} ${lastName}`.trim();
@@ -1277,10 +1277,11 @@ function initOpenHouseSign() {
         fullName,
         email,
         phone,
+        timeline,
         realtorStatus,
         budgetRange,
         suitePreference: "Model Suite 62",
-        suiteInterest: `Open House Sign-In (Budget: ${budgetRange})`,
+        suiteInterest: `Open House Sign-In (${timeline} · ${budgetRange})`,
         subscribeNewsletter,
         isOpenHouse: true,
         source: "Open House QR Check-In",
