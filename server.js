@@ -428,6 +428,7 @@ app.post('/api/leads', (req, res) => {
     existingLeads.push(leadRecord);
     fs.writeFileSync(LEADS_FILE, JSON.stringify(existingLeads, null, 2), 'utf8');
 
+    if (isOH) { broadcastOpenHouseAttendee(leadRecord); }
     console.log(`[Lead Captured] ID: ${leadRecord.id} | ${leadRecord.fullName} | ${leadRecord.email} | OpenHouse: ${isOH} | Newsletter: ${isSubscribedNewsletter} | Tags: ${tags.join(', ')}`);
 
     // Parse names for Follow Up Boss
@@ -504,6 +505,19 @@ app.post('/api/leads', (req, res) => {
 
 // --- Private Open House Portal (Protected by HTTP Basic Auth) ---
 const OPENHOUSE_ADMIN_USER = process.env.OPENHOUSE_ADMIN_USER || 'jeffrey';
+// In-Memory Push Subscribers (Server-Sent Events)
+const sseClients = new Set();
+
+function broadcastOpenHouseAttendee(attendee) {
+  const payload = `data: ${JSON.stringify({ type: 'new_attendee', attendee })}\n\n`;
+  for (const client of sseClients) {
+    try {
+      client.write(payload);
+    } catch (err) {
+      sseClients.delete(client);
+    }
+  }
+}
 const OPENHOUSE_ADMIN_PASS = process.env.OPENHOUSE_ADMIN_PASS || 'LawrenceHill2026!';
 
 function requirePortalAuth(req, res, next) {
@@ -577,6 +591,49 @@ app.get('/api/openhouse/attendees', requirePortalAuth, (req, res) => {
 });
 
 // 3. Private CSV Export
+// 4. Real-Time Push Stream (Server-Sent Events — Zero Polling Traffic)
+app.get('/api/openhouse/stream', requirePortalAuth, (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+    'Access-Control-Allow-Origin': '*'
+  });
+
+  // Read current attendees for immediate hydration
+  let leads = [];
+  try {
+    if (fs.existsSync(LEADS_FILE)) {
+      leads = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+    }
+  } catch (e) {
+    leads = [];
+  }
+
+  const attendees = leads
+    .filter(l => l.isOpenHouse === true || l.source === 'Open House QR Check-In' || l.status === 'OPEN_HOUSE_SIGNIN')
+    .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+  res.write(`data: ${JSON.stringify({ type: 'init', attendees })}\n\n`);
+  sseClients.add(res);
+
+  // Keep-alive heartbeat every 25 seconds
+  const pingInterval = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch (e) {
+      clearInterval(pingInterval);
+      sseClients.delete(res);
+    }
+  }, 25000);
+
+  req.on('close', () => {
+    clearInterval(pingInterval);
+    sseClients.delete(res);
+  });
+});
+
 app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
   try {
     let leads = [];

@@ -454,6 +454,34 @@
       color: var(--color-border-hover);
     }
 
+    
+    /* Live Push Toast */
+    .live-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-copper);
+      color: var(--color-ink);
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: opacity 0.3s ease;
+    }
+    .toast-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--color-success);
+      box-shadow: 0 0 10px var(--color-success);
+    }
+
     @media (max-width: 960px) {
       .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -607,15 +635,20 @@
       <!-- Populated by JavaScript -->
     </div>
 
+  
+    <!-- Live Push Notification Toast -->
+    <div id="live-toast" class="live-toast" style="display: none; opacity: 0;">
+      <div class="toast-dot"></div>
+      <span id="toast-text">New Guest Checked In</span>
+    </div>
+
   </main>
 
   <script>
     // State
     let allAttendees = [];
-    let autoRefreshTimer = null;
-    let countdownSecs = 30;
+    let eventSource = null;
 
-    
     // Helper: Build subpath-aware API URL
     function getApiUrl(path) {
       const p = window.location.pathname;
@@ -654,11 +687,77 @@
       return d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // Fetch Attendees from API
+    // Live Toast Notification
+    function showLiveToast(msg) {
+      const toast = document.getElementById('live-toast');
+      const toastText = document.getElementById('toast-text');
+      if (!toast || !toastText) return;
+      toastText.textContent = msg;
+      toast.style.display = 'flex';
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+      });
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => { toast.style.display = 'none'; }, 300);
+      }, 4500);
+    }
+
+    // Connect to Server-Sent Events (Zero Polling Push)
+    function initSSE() {
+      const syncStatus = document.getElementById('sync-status');
+      const statusDot = document.querySelector('.status-dot');
+
+      if (eventSource) {
+        try { eventSource.close(); } catch(e) {}
+      }
+
+      const streamUrl = getApiUrl('/api/openhouse/stream');
+      eventSource = new EventSource(streamUrl);
+
+      eventSource.onopen = () => {
+        syncStatus.textContent = 'Live Push Active';
+        if (statusDot) {
+          statusDot.style.backgroundColor = 'var(--color-success)';
+          statusDot.style.boxShadow = '0 0 8px var(--color-success)';
+        }
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'init') {
+            allAttendees = Array.isArray(payload.attendees) ? payload.attendees : [];
+            updateKPIs(allAttendees);
+            render();
+          } else if (payload.type === 'new_attendee') {
+            const attendee = payload.attendee;
+            if (attendee && !allAttendees.some(a => a.id === attendee.id)) {
+              allAttendees.unshift(attendee);
+              updateKPIs(allAttendees);
+              render();
+              showLiveToast(`New Check-In: ${attendee.fullName || 'Guest'}`);
+            }
+          }
+        } catch (err) {
+          console.error('Error handling push event:', err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        syncStatus.textContent = 'Reconnecting...';
+        if (statusDot) {
+          statusDot.style.backgroundColor = '#f59e0b';
+          statusDot.style.boxShadow = '0 0 8px #f59e0b';
+        }
+      };
+    }
+
+    // Manual Refresh Fallback
     async function loadAttendees() {
       const syncStatus = document.getElementById('sync-status');
       try {
-        syncStatus.textContent = 'Updating...';
+        syncStatus.textContent = 'Refreshing...';
         const res = await fetch(getApiUrl('/api/openhouse/attendees'));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -666,11 +765,9 @@
         allAttendees = Array.isArray(data.attendees) ? data.attendees : [];
         updateKPIs(allAttendees);
         render();
-        countdownSecs = 30;
-        syncStatus.textContent = `Live (${countdownSecs}s)`;
+        syncStatus.textContent = 'Live Push Active';
       } catch (err) {
-        console.error('Failed to load attendees:', err);
-        syncStatus.textContent = 'Sync Offline';
+        console.error('Failed to manually load attendees:', err);
       }
     }
 
@@ -860,23 +957,11 @@
       loadAttendees();
     });
 
-    // Auto-polling heartbeat every 30s
-    setInterval(() => {
-      countdownSecs--;
-      if (countdownSecs <= 0) {
-        loadAttendees();
-      } else {
-        const syncStatus = document.getElementById('sync-status');
-        if (syncStatus.textContent.startsWith('Live')) {
-          syncStatus.textContent = `Live (${countdownSecs}s)`;
-        }
-      }
-    }, 1000);
-
-    // Bind dynamic CSV export link and initial load
+    // Initialize Server-Sent Events Push and bind CSV button
     const csvBtn = document.getElementById("btn-export-csv");
     if (csvBtn) csvBtn.href = getApiUrl("/api/openhouse/export-csv");
-    loadAttendees();
+    
+    initSSE();
   </script>
 </body>
 </html>
