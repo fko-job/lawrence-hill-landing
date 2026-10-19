@@ -33,9 +33,11 @@ ssh root@187.124.86.103 "cd /root/jeffreyshew/campaigns/lawrencehill && docker c
 
 ## Halloween open house raffle (Oct 24-25, 12:30-4:00 PM)
 - $100 gift card draw, first week of November, for guests who register AND attend. Conditions apply (wording needs brokerage/legal sign-off).
-- Pop-up (everyone once per visit, hidden after Oct 25 2026) -> contact form tagged source `Halloween RSVP (Oct 24-25)` (not an open-house check-in, so not in the portal register).
-- One registration per person: same email OR same phone is rejected (no second CRM lead, no second email). Entry number `LH-HW-XXXXX`.
-- Confirmation email via SMTP (`SMTP_HOST/PORT/USER/PASS`, `MAIL_FROM` in the VPS `.env`); without them no email is sent and the page just shows the number.
+- Two routes, ONE form (the QR check-in modal) and ONE record per person (same email OR phone):
+  - Pop-up button -> check-in modal (dismissable) -> source `Halloween RSVP (Open House form)`: pre-registered, CRM tag `Open House RSVP` + `Halloween RSVP`, then the dark confirmation screen with entry number `LH-HW-XXXXX`.
+  - QR check-in at the venue on Oct 24-25 (Toronto time): registers AND marks attended; a pre-registered person scanning the QR is marked attended on the same record (no new lead, no second email).
+- Repeat attempts are not saved, not sent to the CRM, get no second email. Portal shows "Pre-registered" / "Attended" + entry number; CSV has Raffle Entry # and Raffle Status.
+- Confirmation email via SMTP (`SMTP_HOST/PORT/USER/PASS`, `MAIL_FROM` in the VPS `.env`, see `set-smtp.sh`); without them no email is sent and the page just shows the number.
 
 ## Design/SEO (Canadian real estate)
 Use the installed taste-skill, impeccable, frontend-design and claude-seo skills. Landing pages run Google/Meta ads: mobile-first, fast, clear lead form; include brokerage/REALTOR® disclosures and CASL/PIPEDA consent on forms.

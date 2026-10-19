@@ -3448,3 +3448,10 @@ section, .editorial-section, [id], h1, h2, h3 {
   .hw-card-confirm .hw-body { padding: 28px 22px 24px; }
   .hwc-list > div { grid-template-columns: 1fr; }
 }
+
+/* Check-in form opened from the Halloween pop-up: close button only there (QR visitors stay gated) */
+.oh-dismiss { display: none; }
+.openhouse-modal.promo .oh-dismiss { display: flex; }
+.oh-error { font-size: 0.875rem; font-weight: 600; color: #9b1c1c; margin-bottom: 10px; }
+.oh-error[hidden] { display: none; }
+.oh-raffle-box { font-size: 0.9375rem; line-height: 1.5; color: var(--color-ink); background: var(--color-accent-light); padding: 12px 14px; border-radius: var(--radius-xs); margin: 0 0 14px; text-align: left; }

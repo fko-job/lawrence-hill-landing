@@ -693,6 +693,13 @@
     // Live Toast Notification
     let leadSources = [];
 
+    // Halloween raffle: pre-registered via the pop-up, or attended (checked in by QR at the venue)
+    function raffleBadge(a) {
+      if (!a.raffleEntryId) return '';
+      const attended = Boolean(a.raffleAttendedAt);
+      return `<div style="margin-top:4px"><span class="badge ${attended ? 'badge-direct' : 'badge-neutral'}">${attended ? 'Attended' : 'Pre-registered'} &middot; ${escapeHtml(a.raffleEntryId)}</span></div>`;
+    }
+
     function sourceSelect(a) {
       const opts = ['<option value="">Select source…</option>'].concat(
         leadSources.map(s => `<option value="${escapeHtml(s)}"${a.leadSource === s ? ' selected' : ''}>${escapeHtml(s)}</option>`)
@@ -761,6 +768,9 @@
             leadSources = payload.sources || leadSources;
             updateKPIs(allAttendees);
             render();
+          } else if (payload.type === 'lead_updated') {
+            const i = allAttendees.findIndex(x => x.id === payload.attendee.id);
+            if (i >= 0) { allAttendees[i] = payload.attendee; render(); }
           } else if (payload.type === 'source_updated') {
             const lead = allAttendees.find(a => a.id === payload.id);
             if (lead && lead.leadSource !== payload.leadSource) { lead.leadSource = payload.leadSource; render(); }
@@ -882,6 +892,7 @@
             </td>
             <td>
               <div class="attendee-name">${escapeHtml(a.fullName || 'Guest')}</div>
+              ${raffleBadge(a)}
               <div class="attendee-meta">
                 <a href="mailto:${escapeHtml(a.email)}" class="contact-link" title="Send Email">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
@@ -946,6 +957,7 @@
             <div class="card-top">
               <div>
                 <div class="attendee-name">${escapeHtml(a.fullName || 'Guest')}</div>
+              ${raffleBadge(a)}
                 <div style="font-size: 0.75rem; color: var(--color-ink-muted); margin-top: 2px;">
                   ${escapeHtml(formatTime(a.timestamp))}
                 </div>

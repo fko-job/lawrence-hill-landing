@@ -256,7 +256,7 @@ function initBookingForm() {
       suitePreference: suitePreference,
       suiteInterest: suitePreference,
       subscribeNewsletter: subscribeNewsletter,
-      source: window.lhLeadSource || "Direct Contact Form",
+      source: "Direct Contact Form",
       timestamp: new Date().toISOString()
     };
 
@@ -266,8 +266,6 @@ function initBookingForm() {
       submitBtn.textContent = "Sending Message...";
     }
 
-    const isRaffle = payload.source.startsWith("Halloween RSVP");
-    let raffle = null, duplicate = false, raffleFailed = false;
     try {
       const response = await fetch(getApiUrl("/api/leads"), {
         method: "POST",
@@ -278,11 +276,7 @@ function initBookingForm() {
       if (!response.ok) {
         throw new Error("Server responded with " + response.status);
       }
-      const data = await response.json().catch(() => ({}));
-      raffle = data.raffle || null;
-      duplicate = Boolean(data.duplicate);
     } catch (err) {
-      raffleFailed = isRaffle; // never claim a raffle registration we could not save
       console.warn("Network issue saving lead, storing locally:", err);
       try {
         const stored = JSON.parse(localStorage.getItem("lawrence_hill_leads") || "[]");
@@ -306,23 +300,7 @@ function initBookingForm() {
         ? `<div style="margin-top: 12px; font-size: 0.8125rem; color: #575249; background: #f6f3ee; padding: 10px 14px; border-radius: 4px; border-left: 3px solid #b87333;">You have also been subscribed to Jeffrey Shew's Private Pre-Construction &amp; Investor Briefing.</div>`
         : '';
       const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-      const raffleTerms = "Attend the open house to be entered in the draw for a $100 gift card, held the first week of November. Conditions apply.";
-      if (raffleFailed) {
-        successMsg.innerHTML = `We could not complete your registration right now. Please try again, or call Jeffrey Shew at 647-503-2768.`;
-      } else if (duplicate) {
-        try { if (!hwRegistered()) localStorage.setItem(HW_STORE, JSON.stringify({ name, at: Date.now() })); } catch (e) {} // remember here too: no promo again
-        showHwConfirm({ name, email, duplicate: true });
-        successMsg.innerHTML = `<strong>${esc(name)}</strong>, this email or phone is already registered for the Halloween Open House. Each person can register once. Please check your inbox for your confirmation.`;
-      } else if (raffle) {
-        try { localStorage.setItem(HW_STORE, JSON.stringify({ entryId: raffle.entryId, name, at: Date.now() })); } catch (e) {}
-        showHwConfirm({ name, email, entryId: raffle.entryId, emailing: raffle.emailing });
-        successMsg.innerHTML = `
-          Thank you, <strong>${esc(name)}</strong>. You are registered for the Halloween Open House on October 24 &amp; 25, 12:30 PM to 4:00 PM.<br><br>
-          Your registration number: <strong>${esc(raffle.entryId)}</strong><br>
-          ${raffle.emailing ? "A confirmation is on its way to " + esc(email) + "." : "Please keep this number."}<br><br>
-          ${raffleTerms}
-        `;
-      } else successMsg.innerHTML = `
+      successMsg.innerHTML = `
         Thank you, <strong>${esc(name)}</strong>. Your inquiry has been directly registered.<br><br>
         Jeffrey Shew, Broker (647-503-2768) will contact you directly to discuss suite allocations and private viewing access to Model Suite 62.
         ${newsletterNote}
@@ -1155,6 +1133,18 @@ function initOpenHouseSign() {
     document.body.style.overflow = "";
   }
 
+  // Opened from the Halloween pop-up: web visitors may close it (QR visitors stay gated)
+  document.addEventListener("open-house:open", () => {
+    modal.classList.add("promo");
+    openOpenHouse();
+    setTimeout(() => document.getElementById("oh-first-name")?.focus(), 150);
+  });
+  const dismissPromo = () => { closeOpenHouse(); modal.classList.remove("promo"); };
+  document.getElementById("oh-dismiss-btn")?.addEventListener("click", dismissPromo);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("promo") && modal.classList.contains("active")) dismissPromo();
+  });
+
   // Dismissal is ONLY allowed after registration on the success screen
   if (exploreBtn) exploreBtn.addEventListener("click", closeOpenHouse);
   if (successCloseBtn) successCloseBtn.addEventListener("click", closeOpenHouse);
@@ -1198,6 +1188,9 @@ function initOpenHouseSign() {
       }
 
       const fullName = `${firstName} ${lastName}`.trim();
+      const promoMode = modal.classList.contains("promo");
+      const errBox = document.getElementById("oh-error");
+      if (errBox) errBox.hidden = true;
       const payload = {
         firstName,
         lastName,
@@ -1211,10 +1204,11 @@ function initOpenHouseSign() {
         suiteInterest: `Open House Sign-In (${timeline} · ${budgetRange})`,
         subscribeNewsletter,
         isOpenHouse: true,
-        source: "Open House QR Check-In",
+        source: promoMode ? "Halloween RSVP (Open House form)" : "Open House QR Check-In",
         timestamp: new Date().toISOString()
       };
 
+      let raffle = null, duplicate = false, checkedIn = false;
       try {
         const response = await fetch(getApiUrl("/api/leads"), {
           method: "POST",
@@ -1224,7 +1218,16 @@ function initOpenHouseSign() {
         if (!response.ok) {
           throw new Error("Server responded with " + response.status);
         }
+        const data = await response.json().catch(() => ({}));
+        raffle = data.raffle || null;
+        duplicate = Boolean(data.duplicate);
+        checkedIn = Boolean(data.checkedIn);
       } catch (err) {
+        if (promoMode) { // never claim a registration we could not save
+          if (errBox) { errBox.textContent = "We could not complete your registration. Please try again, or call Jeffrey Shew at 647-503-2768."; errBox.hidden = false; }
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Complete Check-In & View Floor Plans"; }
+          return;
+        }
         console.warn("Network issue saving open house lead, storing locally:", err);
         try {
           const stored = JSON.parse(localStorage.getItem("lawrence_hill_leads") || "[]");
@@ -1233,6 +1236,27 @@ function initOpenHouseSign() {
         } catch (localErr) {
           console.error("Local storage fallback error:", localErr);
         }
+      }
+
+      // Raffle: remember this browser registered (no promo again) and show the result
+      if (raffle || duplicate || checkedIn) {
+        try { if (raffle || !hwRegistered()) localStorage.setItem(HW_STORE, JSON.stringify({ entryId: (raffle || {}).entryId, name: fullName, at: Date.now() })); } catch (e) {}
+      }
+      if (promoMode && (raffle || duplicate)) {
+        dismissPromo(); // pre-registration is done: show the confirmation screen, not the on-site "access granted" view
+        form.reset();
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Complete Check-In & View Floor Plans"; }
+        showHwConfirm({ name: fullName, email, entryId: (raffle || {}).entryId, emailing: (raffle || {}).emailing, duplicate });
+        return;
+      }
+      const raffleBox = document.getElementById("oh-raffle-box");
+      if (raffleBox && (raffle || duplicate || checkedIn)) {
+        const id = (raffle || {}).entryId;
+        raffleBox.textContent = duplicate
+          ? "This email or phone is already registered for the Halloween raffle. Each person can register once."
+          : (checkedIn ? "You are checked in for the Halloween raffle draw (a $100 gift card, first week of November). " : "You are entered in the Halloween raffle draw (a $100 gift card, first week of November). ")
+            + (id ? "Registration number: " + id + "." : "") + (raffle && raffle.emailing ? " A confirmation is on its way to " + email + "." : "") + " Conditions apply.";
+        raffleBox.style.display = "block";
       }
 
       // Switch to Success View
@@ -1270,8 +1294,7 @@ function initHalloweenPopup() {
   pop.querySelectorAll("[data-hw-close]").forEach((el) => el.addEventListener("click", close));
   cta.addEventListener("click", () => {
     close();
-    window.lhLeadSource = "Halloween RSVP (Oct 24-25)"; // read by the contact form on submit
-    document.querySelector('a[href="#book-tour"]')?.click(); // existing scroll + pulse + focus
+    document.dispatchEvent(new CustomEvent("open-house:open")); // same check-in form the QR opens
   });
   pop.addEventListener("keydown", (e) => {
     if (e.key === "Escape") return close();

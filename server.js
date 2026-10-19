@@ -336,6 +336,8 @@ app.post("/api/newsletter", (req, res) => {
 
 
 // --- Halloween open house raffle: one registration per person + confirmation email ---
+const RAFFLE_FROM = Date.parse('2026-10-24T00:00:00-04:00'); // open house days, Toronto time
+const RAFFLE_TO = Date.parse('2026-10-26T00:00:00-04:00');
 const normPhone = (p) => String(p || '').replace(/\D/g, '').slice(-10);
 const ENTRY_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function newEntryId(leads) {
@@ -424,16 +426,28 @@ app.post('/api/leads', (req, res) => {
     const chosenSuite = suitePreference || suiteInterest || 'Model Suite 62 (2 Bed · 781 SF · $569K)';
     const isSubscribedNewsletter = Boolean(subscribeNewsletter);
 
-    // Raffle registration: one per person (same email or same phone). Duplicates are not saved,
-    // not sent to the CRM and get no second email (so nobody can be mail-bombed by retyping their address).
-    const isRaffle = typeof source === 'string' && source.startsWith('Halloween RSVP');
+    // Halloween raffle: ONE record per person (same email or phone) shared by both entry routes:
+    //  - pop-up registration ("Halloween RSVP...", before the event) = registered
+    //  - QR check-in at the venue on Oct 24-25 = registered AND attended
+    // A registered person who later checks in by QR is marked attended on the same record.
+    // Repeat attempts are not saved, not sent to the CRM and get no second email (no mail-bombing a stranger).
+    const isPopupRsvp = typeof source === 'string' && source.startsWith('Halloween RSVP');
+    const duringEvent = Date.now() >= RAFFLE_FROM && Date.now() < RAFFLE_TO;
+    const attendedNow = Boolean(isOH) && !isPopupRsvp && duringEvent;
     let raffleEntryId = null;
-    if (isRaffle) {
+    if (isPopupRsvp || attendedNow) {
       let all = [];
       try { all = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8')); } catch (e) { all = []; }
       const em = email.trim().toLowerCase();
       const ph = normPhone(phone);
-      if (all.some((l) => l.raffleEntryId && (l.email === em || (ph.length >= 7 && normPhone(l.phone) === ph)))) {
+      const prior = all.find((l) => l.raffleEntryId && (l.email === em || (ph.length >= 7 && normPhone(l.phone) === ph)));
+      if (prior) {
+        if (attendedNow && !prior.raffleAttendedAt) {
+          prior.raffleAttendedAt = new Date().toISOString();
+          fs.writeFileSync(LEADS_FILE, JSON.stringify(all, null, 2), 'utf8');
+          broadcastLeadUpdate(prior);
+          return res.status(200).json({ success: true, checkedIn: true, raffle: { entryId: prior.raffleEntryId } });
+        }
         return res.status(200).json({ success: true, duplicate: true });
       }
       raffleEntryId = newEntryId(all);
@@ -459,6 +473,7 @@ app.post('/api/leads', (req, res) => {
       }
     }
     
+    if (isPopupRsvp) tags = tags.map((t) => (t === 'Open House Attendee' ? 'Open House RSVP' : t));
     if (raffleEntryId) tags.push('Halloween RSVP');
 
     // Tag identifying newsletter subscription:
@@ -489,7 +504,7 @@ app.post('/api/leads', (req, res) => {
       closingWindow: '30 to 90 Days',
       modelSuiteLocation: '73 Curlew Dr, Units 62 & 63',
       status: isOH ? 'OPEN_HOUSE_SIGNIN' : 'NEW_VIP_INQUIRY',
-      ...(raffleEntryId && { raffleEntryId, raffleEnrolledAt: new Date().toISOString() })
+      ...(raffleEntryId && { raffleEntryId, raffleEnrolledAt: new Date().toISOString(), ...(attendedNow && { raffleAttendedAt: new Date().toISOString() }) })
     };
 
     // Durable atomic append to leads.json
@@ -571,7 +586,7 @@ app.post('/api/leads', (req, res) => {
 
     return res.status(201).json({
       success: true,
-      raffle: raffleEntryId ? { entryId: raffleEntryId, emailing: Boolean(mailer) } : undefined,
+      raffle: raffleEntryId ? { entryId: raffleEntryId, emailing: Boolean(mailer), attended: attendedNow } : undefined,
       leadId: leadRecord.id,
       isOpenHouse: isOH,
       subscribedNewsletter: isSubscribedNewsletter,
@@ -595,6 +610,13 @@ app.post('/api/leads', (req, res) => {
 const OPENHOUSE_ADMIN_USER = process.env.OPENHOUSE_ADMIN_USER || 'jeffrey';
 // In-Memory Push Subscribers (Server-Sent Events)
 const sseClients = new Set();
+
+function broadcastLeadUpdate(attendee) {
+  const payload = `data: ${JSON.stringify({ type: 'lead_updated', attendee })}\n\n`;
+  for (const client of sseClients) {
+    try { client.write(payload); } catch (err) { sseClients.delete(client); }
+  }
+}
 
 function broadcastOpenHouseAttendee(attendee) {
   const payload = `data: ${JSON.stringify({ type: 'new_attendee', attendee })}\n\n`;
@@ -762,7 +784,7 @@ app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
       .filter(l => l.isOpenHouse === true || l.source === 'Open House QR Check-In' || l.status === 'OPEN_HOUSE_SIGNIN')
       .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
-    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Lead Source', 'Newsletter Opt-in', 'Lead ID', 'Status'];
+    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Lead Source', 'Raffle Entry #', 'Raffle Status', 'Newsletter Opt-in', 'Lead ID', 'Status'];
     const csvRows = [headers.map(c => `"${c}"`).join(',')];
 
     for (const a of attendees) {
@@ -778,6 +800,8 @@ app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
         a.budgetRange || '',
         a.suiteInterest || 'Model Suite 62',
         a.leadSource || '',
+        a.raffleEntryId || '',
+        a.raffleEntryId ? (a.raffleAttendedAt ? 'Attended' : 'Pre-registered') : '',
         a.subscribeNewsletter ? 'YES' : 'NO',
         a.id || '',
         a.status || 'OPEN_HOUSE_SIGNIN'
