@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initBookingForm();
   initMortgageCalculator();
   initNearbyTabs();
-  initQuickPriceList();
   initAmenitiesAccordion();
   initTourBookingInteractions();
   initPriceSheetModal();
@@ -1295,55 +1294,6 @@ function initHalloweenPopup() {
     document.body.style.overflow = "hidden";
     cta.focus();
   }, 1800);
-}
-
-// --- Quick price-list form (first screen): saves the lead, then downloads the PDF ---
-function initQuickPriceList() {
-  const form = document.getElementById("quick-pricelist-form");
-  if (!form) return;
-  const msg = document.getElementById("qpl-msg");
-  const btn = document.getElementById("btn-qpl");
-  const val = (id) => document.getElementById(id).value.trim();
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = val("qpl-name"), email = val("qpl-email"), phone = val("qpl-phone");
-    const missing = ["qpl-name", "qpl-email", "qpl-phone"].find((id) => !val(id));
-    if (missing || !/^\S+@\S+\.\S+$/.test(email)) {
-      msg.textContent = missing ? "Please add your name, email and phone." : "That email doesn't look right.";
-      msg.classList.add("is-error");
-      document.getElementById(missing || "qpl-email").focus();
-      return;
-    }
-    msg.classList.remove("is-error");
-    btn.disabled = true;
-    btn.textContent = "Sending…";
-    try {
-      const res = await fetch(getApiUrl("/api/leads"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName: name, email, phone, suiteInterest: "Model Suite 62", requestIncentives: true, source: "Top Price List Form", timestamp: new Date().toISOString() })
-      });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-    } catch (err) {
-      btn.disabled = false;
-      btn.textContent = "Send me the price list";
-      msg.textContent = "Could not send. Please try again or call 647-503-2768.";
-      msg.classList.add("is-error");
-      return;
-    }
-    form.querySelector("#qpl-fields").hidden = true;
-    msg.textContent = "Thank you, " + name.split(" ")[0] + ". Your price list is downloading.";
-    const link = document.getElementById("ps-direct-download-link");
-    if (link) {
-      const dl = document.createElement("a");
-      dl.href = link.href;
-      dl.download = "Lawrence-Hill-Price-List-Incentive.pdf";
-      document.body.appendChild(dl);
-      dl.click();
-      dl.remove();
-    }
-  });
 }
 
 // --- Halloween registration confirmation screen + "already registered in this browser" memory ---

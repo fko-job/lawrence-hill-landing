@@ -195,16 +195,13 @@
             <span class="price-main">Starting From the Mid $500Ks</span>
             <span class="price-note">Prices Are NET of New Home GST/HST Government Rebate* &middot; Only 5% Deposit</span>
           </div>
-          <form class="quick-pricelist" id="quick-pricelist-form" novalidate aria-labelledby="qpl-title">
-            <p class="qpl-title" id="qpl-title">Get the price list &amp; incentives</p>
-            <div class="qpl-grid" id="qpl-fields">
-              <input type="text" id="qpl-name" class="qpl-input" placeholder="Full name" aria-label="Full name" autocomplete="name" required>
-              <input type="email" id="qpl-email" class="qpl-input" placeholder="Email" aria-label="Email" autocomplete="email" required>
-              <input type="tel" id="qpl-phone" class="qpl-input" placeholder="Phone" aria-label="Phone" autocomplete="tel" required>
-              <button type="submit" class="qpl-btn" id="btn-qpl">Send me the price list</button>
-            </div>
-            <p class="qpl-msg" id="qpl-msg" role="status" aria-live="polite">Instant PDF: pricing, floor plans and incentives.</p>
-          </form>
+          <div class="quick-pricelist">
+            <button type="button" class="btn-primary-dark open-pricesheet-btn quick-pricelist-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Get the price list &amp; incentives</span>
+            </button>
+            <p class="qpl-note">Instant PDF: pricing, floor plans and incentives.</p>
+          </div>
         </div>
       </div>
     </section>
