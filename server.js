@@ -518,7 +518,8 @@ function broadcastOpenHouseAttendee(attendee) {
     }
   }
 }
-const OPENHOUSE_ADMIN_PASS = process.env.OPENHOUSE_ADMIN_PASS || 'LawrenceHill2026!';
+const OPENHOUSE_ADMIN_PASS = process.env.OPENHOUSE_ADMIN_PASS;
+if (!OPENHOUSE_ADMIN_PASS) throw new Error('OPENHOUSE_ADMIN_PASS must be set in .env');
 
 function requirePortalAuth(req, res, next) {
   const authHeader = req.headers['authorization'];
