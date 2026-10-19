@@ -311,8 +311,12 @@ function initBookingForm() {
       if (raffleFailed) {
         successMsg.innerHTML = `We could not complete your registration right now. Please try again, or call Jeffrey Shew at 647-503-2768.`;
       } else if (duplicate) {
+        try { if (!hwRegistered()) localStorage.setItem(HW_STORE, JSON.stringify({ name, at: Date.now() })); } catch (e) {} // remember here too: no promo again
+        showHwConfirm({ name, email, duplicate: true });
         successMsg.innerHTML = `<strong>${esc(name)}</strong>, this email or phone is already registered for the Halloween Open House. Each person can register once. Please check your inbox for your confirmation.`;
       } else if (raffle) {
+        try { localStorage.setItem(HW_STORE, JSON.stringify({ entryId: raffle.entryId, name, at: Date.now() })); } catch (e) {}
+        showHwConfirm({ name, email, entryId: raffle.entryId, emailing: raffle.emailing });
         successMsg.innerHTML = `
           Thank you, <strong>${esc(name)}</strong>. You are registered for the Halloween Open House on October 24 &amp; 25, 12:30 PM to 4:00 PM.<br><br>
           Your registration number: <strong>${esc(raffle.entryId)}</strong><br>
@@ -1256,6 +1260,7 @@ function initHalloweenPopup() {
   if (sp.has("openhouse") || window.location.hash === "#open-house" || window.location.hash === "#openhouse") return; // QR guests already see the check-in
   if (Date.now() >= Date.parse("2026-10-26T00:00:00-04:00")) return; // open house is over
   try { if (sessionStorage.getItem("hwSeen")) return; } catch (e) {}
+  if (hwRegistered()) return; // already registered here: no promo, no second entry
 
   const cta = document.getElementById("hw-register-btn");
   function close() {
@@ -1339,4 +1344,36 @@ function initQuickPriceList() {
       dl.remove();
     }
   });
+}
+
+// --- Halloween registration confirmation screen + "already registered in this browser" memory ---
+const HW_STORE = "lhHwRegistration";
+function hwRegistered() {
+  try { return JSON.parse(localStorage.getItem(HW_STORE) || "null"); } catch (e) { return null; }
+}
+function showHwConfirm({ name, entryId, email, emailing, duplicate }) {
+  const box = document.getElementById("hw-confirm");
+  if (!box) return;
+  const first = (name || "").trim().split(/\s+/)[0] || "";
+  const known = entryId || (hwRegistered() || {}).entryId;
+  document.getElementById("hwc-title").textContent = duplicate ? "You're already registered" : "You're registered";
+  document.getElementById("hwc-lead").textContent = duplicate
+    ? (first ? first + ", t" : "T") + "his email or phone is already registered for the Halloween Open House. Each person can register once."
+    : "Thank you" + (first ? ", " + first : "") + ". See you at the Halloween Open House.";
+  const entry = document.getElementById("hwc-entry");
+  entry.textContent = known || "";
+  document.getElementById("hwc-entry-row").hidden = !known;
+  document.getElementById("hwc-mail").textContent = duplicate
+    ? "Please check your inbox for your confirmation."
+    : (emailing && email ? "A confirmation is on its way to " + email + "." : "Please keep your registration number.");
+  const promo = document.getElementById("halloween-popup");
+  if (promo) promo.hidden = true; // never stack the promo under the confirmation
+  box.hidden = false;
+  document.body.style.overflow = "hidden";
+  const done = document.getElementById("hwc-done");
+  const close = () => { box.hidden = true; document.body.style.overflow = ""; box.removeEventListener("keydown", onKey); };
+  const onKey = (e) => { if (e.key === "Escape") close(); else if (e.key === "Tab") { e.preventDefault(); done.focus(); } };
+  box.querySelectorAll("[data-hwc-close]").forEach((el) => el.addEventListener("click", close, { once: true }));
+  box.addEventListener("keydown", onKey);
+  done.focus();
 }

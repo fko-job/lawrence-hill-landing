@@ -1231,6 +1231,27 @@
     </div>
   </div>
 
+  <!-- Halloween registration confirmation (shown after a registration, or when the person is already registered) -->
+  <div class="hw-popup" id="hw-confirm" role="dialog" aria-modal="true" aria-labelledby="hwc-title" hidden>
+    <div class="hw-backdrop" data-hwc-close></div>
+    <div class="hw-card hw-card-confirm" data-ui>
+      <button type="button" class="hw-close" data-hwc-close aria-label="Close">&times;</button>
+      <div class="hw-body">
+        <svg class="hwc-check" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><circle cx="24" cy="24" r="22"/><path d="M14 25l7 7 13-15"/></svg>
+        <h2 id="hwc-title" class="hw-title"></h2>
+        <p class="hwc-lead" id="hwc-lead"></p>
+        <dl class="hwc-list">
+          <div id="hwc-entry-row"><dt>Registration number</dt><dd class="hwc-entry" id="hwc-entry"></dd></div>
+          <div><dt>When</dt><dd>October 24 &amp; 25, 12:30 PM to 4:00 PM</dd></div>
+          <div><dt>Where</dt><dd>Model Suites 62 &amp; 63, 73 Curlew Drive, North York</dd></div>
+        </dl>
+        <p class="hwc-mail" id="hwc-mail"></p>
+        <div class="hw-actions"><button type="button" class="hw-cta" id="hwc-done" data-hwc-close>Done</button></div>
+        <p class="hw-fine">Attend the open house to be entered in the draw for a $100 gift card, held the first week of November. Conditions apply. One registration per person.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Halloween Open House pop-up (every visitor, once per visit, hidden after Oct 25 2026) -->
   <div class="hw-popup" id="halloween-popup" role="dialog" aria-modal="true" aria-labelledby="hw-title" hidden>
     <div class="hw-backdrop" data-hw-close></div>

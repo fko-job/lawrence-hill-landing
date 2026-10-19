@@ -3458,3 +3458,21 @@ section, .editorial-section, [id], h1, h2, h3 {
   .agent-link-row { display: flex; }
   .form-checkbox-input { width: 24px; height: 24px; flex: none; }
 }
+
+/* ---- Halloween registration confirmation ---- */
+.hw-card-confirm { grid-template-columns: 1fr; max-width: 540px; }
+.hw-card-confirm .hw-body { padding: 36px 32px 28px; }
+.hwc-check { width: 48px; height: 48px; margin-bottom: 14px; display: block; }
+.hwc-check circle { fill: #f08a2c; }
+.hwc-check path { fill: none; stroke: #171512; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.hwc-lead { font-size: 1.125rem; line-height: 1.45; color: #f5f2eb; margin-bottom: 18px; }
+.hwc-list { display: grid; gap: 12px; margin: 0 0 18px; }
+.hwc-list > div { display: grid; grid-template-columns: 9.5rem 1fr; gap: 4px 16px; }
+.hwc-list dt { font-size: 1rem; color: #c9c1b3; }
+.hwc-list dd { font-size: 1rem; font-weight: 600; color: #f5f2eb; margin: 0; }
+.hwc-list dd.hwc-entry { font-family: var(--font-serif); font-size: 1.5rem; color: #f08a2c; letter-spacing: 0.02em; }
+.hwc-mail { font-size: 1rem; color: #c9c1b3; margin-bottom: 20px; }
+@media (max-width: 680px) {
+  .hw-card-confirm .hw-body { padding: 28px 22px 24px; }
+  .hwc-list > div { grid-template-columns: 1fr; }
+}
