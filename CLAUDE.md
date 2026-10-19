@@ -20,13 +20,22 @@ Node/Express app (`server.js`, `public/`, `private/`), Docker, behind Traefik on
 - `root@187.124.86.103` (key `~/.ssh/id_ed25519`), app dir `/root/jeffreyshew/campaigns/lawrencehill/`, container `lawrencehill-app` (port 3000), Docker network `proxy-network`.
 
 ## Deploy (only when the user says so)
+rsync `public/` and `private/` into their own subfolders (a bare `rsync public/ private/ dest/` flattens them into the app root). Dry-run first (`-n`); exclude `screenshot-*.png`.
 ```bash
 git push origin dev
-rsync -avz --exclude '.git' --exclude 'node_modules' --exclude 'data' \
-  server.js private/ public/ root@187.124.86.103:/root/jeffreyshew/campaigns/lawrencehill/
+R=root@187.124.86.103:/root/jeffreyshew/campaigns/lawrencehill
+rsync -avzc server.js package.json package-lock.json $R/
+rsync -avzc private/ $R/private/
+rsync -avzc --exclude 'screenshot-*.png' public/ $R/public/
 ssh root@187.124.86.103 "cd /root/jeffreyshew/campaigns/lawrencehill && docker compose up -d --build"
 ```
-`verify-qa.mjs` is the existing QA script.
+`verify-qa.mjs` is the existing QA script. Secrets live only in the VPS `.env` (use `set-portal-password.sh`, `set-fub-key.sh`, `set-smtp.sh`).
+
+## Halloween open house raffle (Oct 24-25, 12:30-4:00 PM)
+- $100 gift card draw, first week of November, for guests who register AND attend. Conditions apply (wording needs brokerage/legal sign-off).
+- Pop-up (everyone once per visit, hidden after Oct 25 2026) -> contact form tagged source `Halloween RSVP (Oct 24-25)` (not an open-house check-in, so not in the portal register).
+- One registration per person: same email OR same phone is rejected (no second CRM lead, no second email). Entry number `LH-HW-XXXXX`.
+- Confirmation email via SMTP (`SMTP_HOST/PORT/USER/PASS`, `MAIL_FROM` in the VPS `.env`); without them no email is sent and the page just shows the number.
 
 ## Design/SEO (Canadian real estate)
 Use the installed taste-skill, impeccable, frontend-design and claude-seo skills. Landing pages run Google/Meta ads: mobile-first, fast, clear lead form; include brokerage/REALTOR® disclosures and CASL/PIPEDA consent on forms.

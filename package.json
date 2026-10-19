@@ -9,8 +9,9 @@
     "qa": "node verify-qa.mjs"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.21.1",
-    "cors": "^2.8.5"
+    "nodemailer": "^6.10.1"
   },
   "devDependencies": {
     "puppeteer-core": "^23.6.0"

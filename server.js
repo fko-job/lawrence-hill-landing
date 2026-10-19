@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -333,6 +334,63 @@ app.post("/api/newsletter", (req, res) => {
   }
 });
 
+
+// --- Halloween open house raffle: one registration per person + confirmation email ---
+const normPhone = (p) => String(p || '').replace(/\D/g, '').slice(-10);
+const ENTRY_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function newEntryId(leads) {
+  const taken = new Set(leads.map((l) => l.raffleEntryId));
+  let id;
+  do {
+    id = 'LH-HW-' + Array.from({ length: 5 }, () => ENTRY_CHARS[crypto.randomInt(ENTRY_CHARS.length)]).join('');
+  } while (taken.has(id));
+  return id;
+}
+
+// Needs SMTP_HOST, SMTP_USER, SMTP_PASS (+ optional SMTP_PORT, MAIL_FROM) in .env; without them no email is sent.
+const mailer = process.env.SMTP_HOST
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: false,
+      requireTLS: true,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+    })
+  : null;
+
+async function sendRaffleConfirmation(lead) {
+  if (!mailer) {
+    console.warn('[Mail] SMTP not configured, confirmation email skipped for', lead.raffleEntryId);
+    return false;
+  }
+  const first = (lead.fullName || '').split(/\s+/)[0] || 'there';
+  const text = `Hi ${first},
+
+You're registered for the Lawrence Hill Halloween Open House.
+
+Registration number: ${lead.raffleEntryId}
+When: October 24 and 25, 12:30 PM to 4:00 PM
+Where: Model Suites 62 & 63, 73 Curlew Drive, North York
+
+Guests who register and attend the open house are entered in a draw for a $100 gift card. The draw takes place the first week of November. Conditions apply. Each person can register once.
+
+Jeffrey Shew, Broker
+647-503-2768 | jeffreyshew.com`;
+  try {
+    await mailer.sendMail({
+      from: process.env.MAIL_FROM || process.env.SMTP_USER,
+      replyTo: process.env.SMTP_USER,
+      to: lead.email,
+      subject: "You're registered: Lawrence Hill Halloween Open House (Oct 24 & 25)",
+      text
+    });
+    return true;
+  } catch (err) {
+    console.error('[Mail] Confirmation failed:', err.message);
+    return false;
+  }
+}
+
 app.post('/api/leads', (req, res) => {
   try {
     const {
@@ -366,6 +424,21 @@ app.post('/api/leads', (req, res) => {
     const chosenSuite = suitePreference || suiteInterest || 'Model Suite 62 (2 Bed · 781 SF · $569K)';
     const isSubscribedNewsletter = Boolean(subscribeNewsletter);
 
+    // Raffle registration: one per person (same email or same phone). Duplicates are not saved,
+    // not sent to the CRM and get no second email (so nobody can be mail-bombed by retyping their address).
+    const isRaffle = typeof source === 'string' && source.startsWith('Halloween RSVP');
+    let raffleEntryId = null;
+    if (isRaffle) {
+      let all = [];
+      try { all = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8')); } catch (e) { all = []; }
+      const em = email.trim().toLowerCase();
+      const ph = normPhone(phone);
+      if (all.some((l) => l.raffleEntryId && (l.email === em || (ph.length >= 7 && normPhone(l.phone) === ph)))) {
+        return res.status(200).json({ success: true, duplicate: true });
+      }
+      raffleEntryId = newEntryId(all);
+    }
+
     // Follow Up Boss Tags:
     let tags = [];
     if (isOH) {
@@ -386,6 +459,8 @@ app.post('/api/leads', (req, res) => {
       }
     }
     
+    if (raffleEntryId) tags.push('Halloween RSVP');
+
     // Tag identifying newsletter subscription:
     if (isSubscribedNewsletter) {
       tags.push('Newsletter Subscriber', 'Weekly-Newsletter-Updates');
@@ -413,7 +488,8 @@ app.post('/api/leads', (req, res) => {
       depositStructure: '5% on Signing',
       closingWindow: '30 to 90 Days',
       modelSuiteLocation: '73 Curlew Dr, Units 62 & 63',
-      status: isOH ? 'OPEN_HOUSE_SIGNIN' : 'NEW_VIP_INQUIRY'
+      status: isOH ? 'OPEN_HOUSE_SIGNIN' : 'NEW_VIP_INQUIRY',
+      ...(raffleEntryId && { raffleEntryId, raffleEnrolledAt: new Date().toISOString() })
     };
 
     // Durable atomic append to leads.json
@@ -482,8 +558,20 @@ app.post('/api/leads', (req, res) => {
       console.error('[Follow Up Boss] Background post error:', err);
     });
 
+    if (raffleEntryId) {
+      sendRaffleConfirmation(leadRecord).then((sent) => {
+        if (!sent) return;
+        try {
+          const all = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+          const l = all.find((x) => x.id === leadRecord.id);
+          if (l) { l.raffleConfirmationSentAt = new Date().toISOString(); fs.writeFileSync(LEADS_FILE, JSON.stringify(all, null, 2), 'utf8'); }
+        } catch (e) { console.error('[Mail] Could not record confirmation time:', e.message); }
+      });
+    }
+
     return res.status(201).json({
       success: true,
+      raffle: raffleEntryId ? { entryId: raffleEntryId, emailing: Boolean(mailer) } : undefined,
       leadId: leadRecord.id,
       isOpenHouse: isOH,
       subscribedNewsletter: isSubscribedNewsletter,

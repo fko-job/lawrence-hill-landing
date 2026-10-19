@@ -257,7 +257,7 @@ function initBookingForm() {
       suitePreference: suitePreference,
       suiteInterest: suitePreference,
       subscribeNewsletter: subscribeNewsletter,
-      source: "Direct Contact Form",
+      source: window.lhLeadSource || "Direct Contact Form",
       timestamp: new Date().toISOString()
     };
 
@@ -267,6 +267,8 @@ function initBookingForm() {
       submitBtn.textContent = "Sending Message...";
     }
 
+    const isRaffle = payload.source.startsWith("Halloween RSVP");
+    let raffle = null, duplicate = false, raffleFailed = false;
     try {
       const response = await fetch(getApiUrl("/api/leads"), {
         method: "POST",
@@ -277,7 +279,11 @@ function initBookingForm() {
       if (!response.ok) {
         throw new Error("Server responded with " + response.status);
       }
+      const data = await response.json().catch(() => ({}));
+      raffle = data.raffle || null;
+      duplicate = Boolean(data.duplicate);
     } catch (err) {
+      raffleFailed = isRaffle; // never claim a raffle registration we could not save
       console.warn("Network issue saving lead, storing locally:", err);
       try {
         const stored = JSON.parse(localStorage.getItem("lawrence_hill_leads") || "[]");
@@ -300,8 +306,21 @@ function initBookingForm() {
       const newsletterNote = subscribeNewsletter
         ? `<div style="margin-top: 12px; font-size: 0.8125rem; color: #575249; background: #f6f3ee; padding: 10px 14px; border-radius: 4px; border-left: 3px solid #b87333;">You have also been subscribed to Jeffrey Shew's Private Pre-Construction &amp; Investor Briefing.</div>`
         : '';
-      successMsg.innerHTML = `
-        Thank you, <strong>${name}</strong>. Your inquiry has been directly registered.<br><br>
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      const raffleTerms = "Attend the open house to be entered in the draw for a $100 gift card, held the first week of November. Conditions apply.";
+      if (raffleFailed) {
+        successMsg.innerHTML = `We could not complete your registration right now. Please try again, or call Jeffrey Shew at 647-503-2768.`;
+      } else if (duplicate) {
+        successMsg.innerHTML = `<strong>${esc(name)}</strong>, this email or phone is already registered for the Halloween Open House. Each person can register once. Please check your inbox for your confirmation.`;
+      } else if (raffle) {
+        successMsg.innerHTML = `
+          Thank you, <strong>${esc(name)}</strong>. You are registered for the Halloween Open House on October 24 &amp; 25, 12:30 PM to 4:00 PM.<br><br>
+          Your registration number: <strong>${esc(raffle.entryId)}</strong><br>
+          ${raffle.emailing ? "A confirmation is on its way to " + esc(email) + "." : "Please keep this number."}<br><br>
+          ${raffleTerms}
+        `;
+      } else successMsg.innerHTML = `
+        Thank you, <strong>${esc(name)}</strong>. Your inquiry has been directly registered.<br><br>
         Jeffrey Shew, Broker (647-503-2768) will contact you directly to discuss suite allocations and private viewing access to Model Suite 62.
         ${newsletterNote}
       `;
@@ -1133,18 +1152,6 @@ function initOpenHouseSign() {
     document.body.style.overflow = "";
   }
 
-  // Opened from the Halloween pop-up: visitors may dismiss (QR visitors stay gated)
-  document.addEventListener("open-house:open", () => {
-    modal.classList.add("promo");
-    openOpenHouse();
-  });
-  const dismissBtn = document.getElementById("oh-dismiss-btn");
-  const dismissPromo = () => { closeOpenHouse(); modal.classList.remove("promo"); };
-  if (dismissBtn) dismissBtn.addEventListener("click", dismissPromo);
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal.classList.contains("promo") && modal.classList.contains("active")) dismissPromo();
-  });
-
   // Dismissal is ONLY allowed after registration on the success screen
   if (exploreBtn) exploreBtn.addEventListener("click", closeOpenHouse);
   if (successCloseBtn) successCloseBtn.addEventListener("click", closeOpenHouse);
@@ -1259,7 +1266,8 @@ function initHalloweenPopup() {
   pop.querySelectorAll("[data-hw-close]").forEach((el) => el.addEventListener("click", close));
   cta.addEventListener("click", () => {
     close();
-    document.dispatchEvent(new CustomEvent("open-house:open"));
+    window.lhLeadSource = "Halloween RSVP (Oct 24-25)"; // read by the contact form on submit
+    document.querySelector('a[href="#book-tour"]')?.click(); // existing scroll + pulse + focus
   });
   pop.addEventListener("keydown", (e) => {
     if (e.key === "Escape") return close();
@@ -1270,7 +1278,13 @@ function initHalloweenPopup() {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
 
-  setTimeout(() => {
+  // Show once the collage photos are decoded (2.5s cap) so the card never flashes half-empty
+  const photosReady = Promise.race([
+    Promise.all([...pop.querySelectorAll(".hw-photo")].map((img) => img.decode().catch(() => {}))),
+    new Promise((r) => setTimeout(r, 2500))
+  ]);
+  setTimeout(async () => {
+    await photosReady;
     if (document.getElementById("openhouse-modal")?.classList.contains("active")) return;
     pop.hidden = false;
     document.body.style.overflow = "hidden";
