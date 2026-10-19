@@ -306,7 +306,7 @@ app.post("/api/newsletter", (req, res) => {
       type: "Registration",
       message: `Newsletter Subscription: Private Investor Briefing · Interests: ${(interests || []).join(", ") || "Pre-Construction, Investing"}`,
       description: "Subscribed to Jeffrey Shew's Private Pre-Construction & Investor Briefing",
-      pageUrl: "https://staging.jeffreyshew.com/lawrence-hill/",
+      pageUrl: "https://jeffreyshew.com/lawrence-hill/",
       person: {
         firstName,
         lastName,
@@ -471,7 +471,7 @@ app.post('/api/leads', (req, res) => {
       description: isOH
         ? `Lawrence Hill Open House Check-In (Model Suite 62 · 73 Curlew Dr) · Timeline: ${timeline || 'Immediate'} · Budget: ${budgetRange || 'Flexible'} · ${isSubscribedNewsletter ? 'Newsletter Subscribed' : 'Guest Sign-In'}`
         : `Lawrence Hill VIP Inquiry · Model Suite 62 · ${isSubscribedNewsletter ? 'Subscribed to Newsletter' : 'Standard Inquiry'}`,
-      pageUrl: 'https://staging.jeffreyshew.com/lawrence-hill/' + (isOH ? '?openhouse=true' : ''),
+      pageUrl: 'https://jeffreyshew.com/lawrence-hill/' + (isOH ? '?openhouse=true' : ''),
       person: personObj
     };
 
