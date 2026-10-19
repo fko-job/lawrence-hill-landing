@@ -518,7 +518,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
         <span>Refresh</span>
       </button>
-      <a href="/api/openhouse/export-csv" class="btn btn-copper">
+      <a href="#" id="btn-export-csv" class="btn btn-copper">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         <span>Export CSV</span>
       </a>
@@ -615,6 +615,15 @@
     let autoRefreshTimer = null;
     let countdownSecs = 30;
 
+    
+    // Helper: Build subpath-aware API URL
+    function getApiUrl(path) {
+      const p = window.location.pathname;
+      if (p.startsWith('/lawrence-hill')) return '/lawrence-hill' + path;
+      if (p.startsWith('/lawrencehill')) return '/lawrencehill' + path;
+      return path;
+    }
+
     // Helper: Escape HTML to prevent XSS
     function escapeHtml(str) {
       if (!str) return '';
@@ -650,7 +659,7 @@
       const syncStatus = document.getElementById('sync-status');
       try {
         syncStatus.textContent = 'Updating...';
-        const res = await fetch('/api/openhouse/attendees');
+        const res = await fetch(getApiUrl('/api/openhouse/attendees'));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         
@@ -864,7 +873,9 @@
       }
     }, 1000);
 
-    // Initial load
+    // Bind dynamic CSV export link and initial load
+    const csvBtn = document.getElementById("btn-export-csv");
+    if (csvBtn) csvBtn.href = getApiUrl("/api/openhouse/export-csv");
     loadAttendees();
   </script>
 </body>
