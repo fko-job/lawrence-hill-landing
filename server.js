@@ -3,6 +3,7 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -497,6 +498,127 @@ app.post('/api/leads', (req, res) => {
   } catch (error) {
     console.error('Error saving lead:', error);
     return res.status(500).json({ error: 'Internal server error while saving lead.' });
+  }
+});
+
+
+// --- Private Open House Portal (Protected by HTTP Basic Auth) ---
+const OPENHOUSE_ADMIN_USER = process.env.OPENHOUSE_ADMIN_USER || 'jeffrey';
+const OPENHOUSE_ADMIN_PASS = process.env.OPENHOUSE_ADMIN_PASS || 'LawrenceHill2026!';
+
+function requirePortalAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Lawrence Hill Open House Register"');
+    return res.status(401).send('Authentication required to access the Open House register.');
+  }
+
+  try {
+    const base64Credentials = authHeader.split(' ')[1];
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf8');
+    const separatorIdx = credentials.indexOf(':');
+    if (separatorIdx === -1) {
+      res.setHeader('WWW-Authenticate', 'Basic realm="Lawrence Hill Open House Register"');
+      return res.status(401).send('Invalid credentials format.');
+    }
+
+    const username = credentials.substring(0, separatorIdx);
+    const password = credentials.substring(separatorIdx + 1);
+
+    const userBuf = Buffer.from(username);
+    const expectedUserBuf = Buffer.from(OPENHOUSE_ADMIN_USER);
+    const passBuf = Buffer.from(password);
+    const expectedPassBuf = Buffer.from(OPENHOUSE_ADMIN_PASS);
+
+    const isUserValid = userBuf.length === expectedUserBuf.length && crypto.timingSafeEqual(userBuf, expectedUserBuf);
+    const isPassValid = passBuf.length === expectedPassBuf.length && crypto.timingSafeEqual(passBuf, expectedPassBuf);
+
+    if (!isUserValid || !isPassValid) {
+      res.setHeader('WWW-Authenticate', 'Basic realm="Lawrence Hill Open House Register"');
+      return res.status(401).send('Access denied. Invalid username or password.');
+    }
+
+    next();
+  } catch (err) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Lawrence Hill Open House Register"');
+    return res.status(401).send('Authentication error.');
+  }
+}
+
+// 1. Private Portal View
+app.get('/openhouse-portal', requirePortalAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'private', 'openhouse-portal.html'));
+});
+app.get('/openhouse-portal.html', requirePortalAuth, (req, res) => {
+  res.redirect('/openhouse-portal');
+});
+
+// 2. Private Attendees API
+app.get('/api/openhouse/attendees', requirePortalAuth, (req, res) => {
+  try {
+    let leads = [];
+    if (fs.existsSync(LEADS_FILE)) {
+      leads = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+    }
+
+    const attendees = leads
+      .filter(l => l.isOpenHouse === true || l.source === 'Open House QR Check-In' || l.status === 'OPEN_HOUSE_SIGNIN')
+      .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+    res.json({
+      success: true,
+      count: attendees.length,
+      attendees
+    });
+  } catch (err) {
+    console.error('Error reading open house attendees:', err);
+    res.status(500).json({ error: 'Failed to retrieve attendees.' });
+  }
+});
+
+// 3. Private CSV Export
+app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
+  try {
+    let leads = [];
+    if (fs.existsSync(LEADS_FILE)) {
+      leads = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+    }
+
+    const attendees = leads
+      .filter(l => l.isOpenHouse === true || l.source === 'Open House QR Check-In' || l.status === 'OPEN_HOUSE_SIGNIN')
+      .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Newsletter Opt-in', 'Lead ID', 'Status'];
+    const csvRows = [headers.map(c => `"${c}"`).join(',')];
+
+    for (const a of attendees) {
+      const dt = new Date(a.timestamp || 0);
+      const row = [
+        dt.toISOString().split('T')[0],
+        dt.toISOString().split('T')[1]?.replace('Z', '') || '',
+        a.fullName || '',
+        a.email || '',
+        a.phone || '',
+        a.realtorStatus || 'Direct Buyer',
+        a.timeline || 'Immediate',
+        a.budgetRange || '',
+        a.suiteInterest || 'Model Suite 62',
+        a.subscribeNewsletter ? 'YES' : 'NO',
+        a.id || '',
+        a.status || 'OPEN_HOUSE_SIGNIN'
+      ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+
+      csvRows.push(row);
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `lawrence-hill-openhouse-attendees-${today}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csvRows.join('\r\n'));
+  } catch (err) {
+    console.error('Error generating CSV export:', err);
+    res.status(500).send('Error generating CSV export.');
   }
 });
 
