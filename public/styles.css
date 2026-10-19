@@ -3243,3 +3243,165 @@ section, .editorial-section, [id], h1, h2, h3 {
   line-height: 1.5;
   margin: 0 0 18px;
 }
+
+/* ==========================================================================
+   Halloween Open House pop-up: dark editorial card, moon + bats + spider, corner web (flat colour)
+   ========================================================================== */
+.hw-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+.hw-popup[hidden] { display: none; }
+.hw-backdrop { position: fixed; inset: 0; background: rgba(10, 8, 7, 0.82); }
+.hw-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+  background: #171512;
+  color: #f5f2eb;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 0 28px 56px rgba(0, 0, 0, 0.5); /* taste-skill-ignore */
+  animation: hw-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.hw-web {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 150px;
+  height: 150px;
+  z-index: 1;
+  pointer-events: none;
+  fill: none;
+  stroke: #8a7b69;
+  stroke-width: 1;
+  opacity: 0.55;
+}
+.hw-art {
+  order: 2;
+  position: relative;
+  background: #2a231d;
+  overflow: hidden;
+  min-height: 100%;
+}
+.hw-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 30% 50%; }
+.hw-art::after { content: ""; position: absolute; inset: 0; background: rgba(23, 21, 18, 0.32); } /* flat scrim: dusk mood */
+.hw-body { padding: 44px 40px 36px; }
+.hw-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.875rem, 4.4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #f5f2eb;
+  margin-bottom: 16px;
+  text-wrap: balance;
+}
+.hw-when {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #f08a2c;
+}
+.hw-time {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #f5f2eb;
+  margin-top: 2px;
+}
+.hw-where {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #c9c1b3;
+  margin: 8px 0 22px;
+}
+.hw-where strong { color: #f5f2eb; font-weight: 700; }
+.hw-prize {
+  font-size: 1.125rem;
+  line-height: 1.45;
+  color: #f5f2eb;
+  margin-bottom: 24px;
+}
+.hw-prize strong {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: #f08a2c;
+}
+.hw-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+.hw-cta {
+  background: #f08a2c;
+  color: #171512;
+  border: 0;
+  border-radius: var(--radius-xs);
+  font: 700 1rem var(--font-sans);
+  padding: 14px 24px;
+  min-height: 48px;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.hw-cta:hover { background: #f79d46; }
+.hw-cta:active { transform: translateY(1px); }
+.hw-later {
+  background: none;
+  border: 0;
+  font: 600 1rem var(--font-sans);
+  color: #c9c1b3;
+  text-decoration: underline;
+  padding: 12px 4px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.hw-later:hover { color: #f5f2eb; }
+.hw-cta:focus-visible, .hw-later:focus-visible, .hw-close:focus-visible {
+  outline: 3px solid #f5f2eb;
+  outline-offset: 2px;
+}
+.hw-fine {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #b3ab9d;
+  margin-top: 22px;
+}
+.hw-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(245, 242, 235, 0.92);
+  color: #171512;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.hw-close:hover { background: #ffffff; }
+
+@keyframes hw-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 680px) {
+  .hw-card { grid-template-columns: 1fr; }
+  .hw-art { order: 0; min-height: 0; height: 190px; }
+  .hw-web { width: 110px; height: 110px; }
+  .hw-body { padding: 26px 22px 26px; }
+  .hw-cta { width: 100%; }
+  .hw-actions { flex-direction: column; align-items: stretch; text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hw-card { animation: none; }
+}
+
+/* Close button on the check-in form only when it was opened from the pop-up (QR visitors stay gated) */
+.oh-dismiss { display: none; }
+.openhouse-modal.promo .oh-dismiss { display: flex; }

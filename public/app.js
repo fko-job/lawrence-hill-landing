@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPriceSheetModal();
   initNewsletterForm();
   initOpenHouseSign();
+  initHalloweenPopup();
 });
 
 // --- Gallery Engine ---
@@ -1228,6 +1229,18 @@ function initOpenHouseSign() {
     document.body.style.overflow = "";
   }
 
+  // Opened from the Halloween pop-up: visitors may dismiss (QR visitors stay gated)
+  document.addEventListener("open-house:open", () => {
+    modal.classList.add("promo");
+    openOpenHouse();
+  });
+  const dismissBtn = document.getElementById("oh-dismiss-btn");
+  const dismissPromo = () => { closeOpenHouse(); modal.classList.remove("promo"); };
+  if (dismissBtn) dismissBtn.addEventListener("click", dismissPromo);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("promo") && modal.classList.contains("active")) dismissPromo();
+  });
+
   // Dismissal is ONLY allowed after registration on the success screen
   if (exploreBtn) exploreBtn.addEventListener("click", closeOpenHouse);
   if (successCloseBtn) successCloseBtn.addEventListener("click", closeOpenHouse);
@@ -1322,4 +1335,41 @@ function initOpenHouseSign() {
       }
     });
   }
+}
+
+// --- Halloween Open House pop-up: every visitor once per visit, until the event ends ---
+function initHalloweenPopup() {
+  const pop = document.getElementById("halloween-popup");
+  if (!pop) return;
+  const sp = new URLSearchParams(window.location.search);
+  if (sp.has("openhouse") || window.location.hash === "#open-house" || window.location.hash === "#openhouse") return; // QR guests already see the check-in
+  if (Date.now() >= Date.parse("2026-10-26T00:00:00-04:00")) return; // open house is over
+  try { if (sessionStorage.getItem("hwSeen")) return; } catch (e) {}
+
+  const cta = document.getElementById("hw-register-btn");
+  function close() {
+    pop.hidden = true;
+    document.body.style.overflow = "";
+    try { sessionStorage.setItem("hwSeen", "1"); } catch (e) {}
+  }
+  pop.querySelectorAll("[data-hw-close]").forEach((el) => el.addEventListener("click", close));
+  cta.addEventListener("click", () => {
+    close();
+    document.dispatchEvent(new CustomEvent("open-house:open"));
+  });
+  pop.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") return close();
+    if (e.key !== "Tab") return;
+    const f = [...pop.querySelectorAll("button")].filter((b) => b.offsetParent !== null);
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+
+  setTimeout(() => {
+    if (document.getElementById("openhouse-modal")?.classList.contains("active")) return;
+    pop.hidden = false;
+    document.body.style.overflow = "hidden";
+    cta.focus();
+  }, 1800);
 }
