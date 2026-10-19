@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBookingForm();
   initMortgageCalculator();
   initNearbyTabs();
-  initCalendarWidget();
+  initQuickPriceList();
   initAmenitiesAccordion();
   initTourBookingInteractions();
   initPriceSheetModal();
@@ -254,8 +254,6 @@ function initBookingForm() {
       email: email,
       phone: phone,
       realtorStatus: realtorStatus,
-      tourDate: "2026-10-16",
-      tourTime: "Flexible VIP Appointment",
       suitePreference: suitePreference,
       suiteInterest: suitePreference,
       subscribeNewsletter: subscribeNewsletter,
@@ -417,100 +415,6 @@ function initNearbyTabs() {
       }
     });
   });
-}
-
-// --- Interactive Month Calendar Booking Widget ---
-function initCalendarWidget() {
-  const container = document.getElementById('calendar-days-container');
-  const monthTitle = document.getElementById('cal-month-title');
-  const tourDateInput = document.getElementById('tour-date');
-  const prevBtn = document.getElementById('cal-prev-btn');
-  const nextBtn = document.getElementById('cal-next-btn');
-
-  if (!container || !tourDateInput) return;
-
-  // Static 2026 October calendar model (matching listing date context)
-  const currentYear = 2026;
-  const currentMonth = 9; // October is 0-indexed 9
-  const daysInMonth = 31;
-  const firstDayIndex = 4; // Oct 1, 2026 is a Thursday (0=Sun, 1=Mon, ..., 4=Thu)
-
-  let selectedDay = 16; // Default to mid-October 2026
-
-  function renderCalendar() {
-    container.innerHTML = '';
-    monthTitle.textContent = 'October 2026';
-
-    // Blank cells before day 1
-    for (let i = 0; i < firstDayIndex; i++) {
-      const blank = document.createElement('div');
-      blank.className = 'calendar-day-cell disabled';
-      blank.setAttribute('aria-hidden', 'true');
-      container.appendChild(blank);
-    }
-
-    // Days 1 through 31
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dayCell = document.createElement('button');
-      dayCell.type = 'button';
-      dayCell.className = 'calendar-day-cell';
-      dayCell.textContent = d;
-      dayCell.setAttribute('role', 'gridcell');
-      dayCell.setAttribute('aria-label', `October ${d}, 2026`);
-
-      // Mark past or unavailable days (e.g. past days or Mondays when closed)
-      const dayOfWeek = (firstDayIndex + d - 1) % 7;
-      const isAvailable = (dayOfWeek !== 1); // Open Tue-Sun, closed Mon
-
-      if (isAvailable) {
-        const dot = document.createElement('span');
-        dot.className = 'avail-dot';
-        dayCell.appendChild(dot);
-      } else {
-        dayCell.classList.add('disabled');
-        dayCell.setAttribute('aria-disabled', 'true');
-      }
-
-      if (d === selectedDay) {
-        dayCell.classList.add('selected');
-        dayCell.setAttribute('aria-selected', 'true');
-      }
-
-      dayCell.addEventListener('click', () => {
-        if (!isAvailable) return;
-        selectedDay = d;
-        const mm = String(currentMonth + 1).padStart(2, '0');
-        const dd = String(d).padStart(2, '0');
-        tourDateInput.value = `${currentYear}-${mm}-${dd}`;
-
-        container.querySelectorAll('.calendar-day-cell').forEach(c => {
-          c.classList.remove('selected');
-          c.removeAttribute('aria-selected');
-        });
-        dayCell.classList.add('selected');
-        dayCell.setAttribute('aria-selected', 'true');
-      });
-
-      container.appendChild(dayCell);
-    }
-
-    // Set initial date
-    const mm = String(currentMonth + 1).padStart(2, '0');
-    const dd = String(selectedDay).padStart(2, '0');
-    tourDateInput.value = `${currentYear}-${mm}-${dd}`;
-  }
-
-  if (prevBtn && nextBtn) {
-    prevBtn.addEventListener('click', () => {
-      // Keep within active launch period
-      renderCalendar();
-    });
-    nextBtn.addEventListener('click', () => {
-      renderCalendar();
-    });
-  }
-
-  renderCalendar();
 }
 
 // --- Amenities Accordion Drawer Toggles ---
@@ -1372,4 +1276,53 @@ function initHalloweenPopup() {
     document.body.style.overflow = "hidden";
     cta.focus();
   }, 1800);
+}
+
+// --- Quick price-list form (first screen): saves the lead, then downloads the PDF ---
+function initQuickPriceList() {
+  const form = document.getElementById("quick-pricelist-form");
+  if (!form) return;
+  const msg = document.getElementById("qpl-msg");
+  const btn = document.getElementById("btn-qpl");
+  const val = (id) => document.getElementById(id).value.trim();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = val("qpl-name"), email = val("qpl-email"), phone = val("qpl-phone");
+    const missing = ["qpl-name", "qpl-email", "qpl-phone"].find((id) => !val(id));
+    if (missing || !/^\S+@\S+\.\S+$/.test(email)) {
+      msg.textContent = missing ? "Please add your name, email and phone." : "That email doesn't look right.";
+      msg.classList.add("is-error");
+      document.getElementById(missing || "qpl-email").focus();
+      return;
+    }
+    msg.classList.remove("is-error");
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    try {
+      const res = await fetch(getApiUrl("/api/leads"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName: name, email, phone, suiteInterest: "Model Suite 62", requestIncentives: true, source: "Top Price List Form", timestamp: new Date().toISOString() })
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "Send me the price list";
+      msg.textContent = "Could not send. Please try again or call 647-503-2768.";
+      msg.classList.add("is-error");
+      return;
+    }
+    form.querySelector("#qpl-fields").hidden = true;
+    msg.textContent = "Thank you, " + name.split(" ")[0] + ". Your price list is downloading.";
+    const link = document.getElementById("ps-direct-download-link");
+    if (link) {
+      const dl = document.createElement("a");
+      dl.href = link.href;
+      dl.download = "Lawrence-Hill-Price-List-Incentive.pdf";
+      document.body.appendChild(dl);
+      dl.click();
+      dl.remove();
+    }
+  });
 }

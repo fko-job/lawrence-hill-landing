@@ -10,7 +10,7 @@
   --color-ink: #171512;
   --color-ink-muted: #575249;
   --muted: #6e6e69;
-  --color-ink-faint: #7d776c;
+  --color-ink-faint: #6a655b;
   --color-border: #ded7c9;
   --color-border-dark: #171512;
   --color-accent: #8b6e3f;
@@ -421,10 +421,9 @@ img {
 .main-editorial-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
-  max-width: 100%;
   gap: 48px;
   align-items: start;
-  padding-bottom: 80px;
+  padding-bottom: 32px;
 }
 
 /* Editorial Left Column */
@@ -512,7 +511,7 @@ img {
   color: var(--color-accent);
   margin-top: 2px;
 }
-.incentive-content h4 {
+.incentive-content h3 {
   font-size: 0.9375rem;
   font-weight: 700;
   color: var(--color-ink);
@@ -559,7 +558,7 @@ img {
   justify-content: space-between;
 }
 .comparison-tag {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 2px;
@@ -971,7 +970,7 @@ img {
   font-weight: 700;
   font-size: 1rem;
 }
-.agent-info h4 {
+.agent-info h3 {
   font-size: 0.9375rem;
   font-weight: 700;
   color: var(--color-ink);
@@ -1071,12 +1070,12 @@ img {
   box-sizing: border-box;
 }
 .newsletter-input:focus {
-  outline: 2px solid #b87333 !important;
+  outline: 2px solid #8f5517 !important;
   outline-offset: 1px;
 }
 
 .newsletter-btn {
-  background: #b87333;
+  background: #8f5517;
   color: #ffffff;
   font-size: 0.875rem;
   font-weight: 700;
@@ -1396,7 +1395,7 @@ img {
     white-space: nowrap !important;
   }
   .brand-subtitle {
-    font-size: 0.625rem !important;
+    font-size: 0.75rem !important;
     letter-spacing: 0.04em !important;
     line-height: 1.2 !important;
     white-space: nowrap !important;
@@ -1415,7 +1414,7 @@ img {
     gap: 0 !important;
   }
   .header-phone-link {
-    font-size: 0.6875rem !important;
+    font-size: 0.75rem !important;
     line-height: 1.2 !important;
     text-align: right !important;
     white-space: nowrap !important;
@@ -1907,7 +1906,7 @@ img {
   font-size: 1.125rem;
 }
 .score-circle .unit {
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   opacity: 0.85;
@@ -2005,7 +2004,7 @@ img {
   color: var(--color-ink);
 }
 .route-distance {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--color-ink-faint);
 }
 
@@ -2164,7 +2163,7 @@ img {
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
   text-align: center;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--color-ink-faint);
   text-transform: uppercase;
@@ -2222,7 +2221,7 @@ img {
   align-items: center;
   gap: 14px;
   margin-top: 10px;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--color-ink-faint);
 }
 .legend-item {
@@ -2315,7 +2314,7 @@ img {
   flex-direction: column;
 }
 .spec-compact-label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-ink-faint);
@@ -2533,7 +2532,7 @@ img {
 
 /* --- Long-Tail FAQ --- */
 .faq-section {
-  padding: 48px 0 56px;
+  padding: 32px 0 56px;
   border-top: 1px solid var(--color-border); /* taste-skill-ignore */
 }
 .faq-accordion-group {
@@ -2751,7 +2750,7 @@ section, .editorial-section, [id], h1, h2, h3 {
   .map-view-btn {
     justify-content: center !important;
     padding: 8px 4px !important;
-    font-size: 0.6875rem !important;
+    font-size: 0.75rem !important;
     min-height: 44px !important;
     box-sizing: border-box !important;
   }
@@ -2797,7 +2796,7 @@ section, .editorial-section, [id], h1, h2, h3 {
     font-size: 1rem !important;
   }
   .score-circle .unit {
-    font-size: 0.5625rem !important;
+    font-size: 0.75rem !important;
   }
   .score-info .score-title {
     font-size: 0.875rem !important;
@@ -2826,7 +2825,7 @@ section, .editorial-section, [id], h1, h2, h3 {
 
 .booking-card.highlight-pulse {
   animation: bookingCardPulse 1.2s ease-out 2;
-  border-color: #b87333 !important;
+  border-color: #8f5517 !important;
 }
 
 /* --- VIP Price Sheet & Floor Plan Dossier Modal --- */
@@ -2871,11 +2870,11 @@ section, .editorial-section, [id], h1, h2, h3 {
 
 .ps-modal-badge {
   display: inline-block;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #b87333;
+  color: #8f5517;
   margin-bottom: 6px;
 }
 
@@ -2910,7 +2909,7 @@ section, .editorial-section, [id], h1, h2, h3 {
 }
 
 .ps-hl-label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-ink-muted);
@@ -3027,7 +3026,7 @@ section, .editorial-section, [id], h1, h2, h3 {
     top: 8px !important;
     left: 8px !important;
     padding: 3px 8px !important;
-    font-size: 0.6875rem !important;
+    font-size: 0.75rem !important;
     background: rgba(14, 13, 11, 0.45) !important;
     backdrop-filter: blur(4px) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -3043,7 +3042,7 @@ section, .editorial-section, [id], h1, h2, h3 {
     top: 8px !important;
     right: 8px !important;
     padding: 3px 8px !important;
-    font-size: 0.6875rem !important;
+    font-size: 0.75rem !important;
     font-weight: 600 !important;
     background: rgba(14, 13, 11, 0.45) !important;
     backdrop-filter: blur(4px) !important;
@@ -3165,7 +3164,7 @@ section, .editorial-section, [id], h1, h2, h3 {
   align-items: center;
   gap: 8px;
   background: #f6f3ee;
-  color: #b87333;
+  color: #8f5517;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -3405,3 +3404,54 @@ section, .editorial-section, [id], h1, h2, h3 {
 /* Close button on the check-in form only when it was opened from the pop-up (QR visitors stay gated) */
 .oh-dismiss { display: none; }
 .openhouse-modal.promo .oh-dismiss { display: flex; }
+
+/* ---- Broker card now lives in the left column (all tabs) ---- */
+.editorial-column > .agent-contact-box { margin-top: -24px; }
+
+/* ---- Quick price-list form (first screen) ---- */
+.quick-pricelist { flex: 1 1 420px; max-width: 560px; margin-left: auto; }
+.qpl-title { font: 700 1rem var(--font-sans); color: var(--color-ink); margin-bottom: 10px; }
+.qpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.qpl-grid[hidden] { display: none; }
+.qpl-input {
+  min-height: 48px;
+  padding: 10px 14px;
+  font: 400 1rem var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-xs);
+  width: 100%;
+}
+.qpl-input:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.qpl-btn {
+  min-height: 48px;
+  padding: 10px 18px;
+  font: 700 1rem var(--font-sans);
+  color: #ffffff;
+  background: var(--color-ink);
+  border: 0;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.qpl-btn:hover { background: #2c2823; }
+.qpl-btn:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.qpl-btn:disabled { opacity: 0.7; cursor: progress; }
+.qpl-msg { font-size: 0.875rem; color: var(--color-ink-muted); margin-top: 8px; }
+.qpl-msg.is-error { color: #9b1c1c; font-weight: 600; }
+@media (max-width: 680px) {
+  .quick-pricelist { flex-basis: 100%; max-width: none; margin-left: 0; }
+  .qpl-grid { grid-template-columns: 1fr; }
+}
+
+/* ---- 44px touch targets (phone) ---- */
+@media (max-width: 768px) {
+  .header-phone-anchor, .top-announcement-phone, .brand-title, .agent-link-row, .form-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .agent-link-row { display: flex; }
+  .form-checkbox-input { width: 24px; height: 24px; flex: none; }
+}

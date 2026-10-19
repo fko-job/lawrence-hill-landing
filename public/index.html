@@ -195,7 +195,17 @@
             <span class="price-main">Starting From the Mid $500Ks</span>
             <span class="price-note">Prices Are NET of New Home GST/HST Government Rebate* &middot; Only 5% Deposit</span>
           </div>
-                  </div>
+          <form class="quick-pricelist" id="quick-pricelist-form" novalidate aria-labelledby="qpl-title">
+            <p class="qpl-title" id="qpl-title">Get the price list &amp; incentives</p>
+            <div class="qpl-grid" id="qpl-fields">
+              <input type="text" id="qpl-name" class="qpl-input" placeholder="Full name" aria-label="Full name" autocomplete="name" required>
+              <input type="email" id="qpl-email" class="qpl-input" placeholder="Email" aria-label="Email" autocomplete="email" required>
+              <input type="tel" id="qpl-phone" class="qpl-input" placeholder="Phone" aria-label="Phone" autocomplete="tel" required>
+              <button type="submit" class="qpl-btn" id="btn-qpl">Send me the price list</button>
+            </div>
+            <p class="qpl-msg" id="qpl-msg" role="status" aria-live="polite">Instant PDF: pricing, floor plans and incentives.</p>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -275,7 +285,7 @@
             <div class="incentive-row">
               <svg class="incentive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <div class="incentive-content">
-                <h4>Only 5% Deposit Required</h4>
+                <h3>Only 5% Deposit Required</h3>
                 <p>Simple 5% on signing held safely in trust with Harris Sheaffer LLP until closing.</p>
               </div>
             </div>
@@ -283,7 +293,7 @@
             <div class="incentive-row">
               <svg class="incentive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <div class="incentive-content">
-                <h4>$0 Development Charges &amp; Levies</h4>
+                <h3>$0 Development Charges &amp; Levies</h3>
                 <p>All municipal development charges and levies capped at zero. No surprise closing bills.</p>
               </div>
             </div>
@@ -291,7 +301,7 @@
             <div class="incentive-row">
               <svg class="incentive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <div class="incentive-content">
-                <h4>$0 Meter Connection Fees</h4>
+                <h3>$0 Meter Connection Fees</h3>
                 <p>Hydro and water meter installation and connection fees completely covered by the builder.</p>
               </div>
             </div>
@@ -299,7 +309,7 @@
             <div class="incentive-row">
               <svg class="incentive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <div class="incentive-content">
-                <h4>No Interim Occupancy Fees</h4>
+                <h3>No Interim Occupancy Fees</h3>
                 <p>Move directly into final registered title ownership. Zero wasted occupancy rent.</p>
               </div>
             </div>
@@ -307,7 +317,7 @@
             <div class="incentive-row">
               <svg class="incentive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <div class="incentive-content">
-                <h4>Underground Parking Included</h4>
+                <h3>Underground Parking Included</h3>
                 <p>Deeded secure underground parking stall included with your suite purchase ($55,000 value).</p>
               </div>
             </div>
@@ -315,7 +325,7 @@
             <div class="incentive-row">
               <svg class="incentive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <div class="incentive-content">
-                <h4>Private Storage Locker Included</h4>
+                <h3>Private Storage Locker Included</h3>
                 <p>Full storage locker unit included at no additional fee ($6,000 builder value).</p>
               </div>
             </div>
@@ -323,7 +333,7 @@
             <div class="incentive-row">
               <svg class="incentive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <div class="incentive-content">
-                <h4>$500 IKEA Move-in Gift Card</h4>
+                <h3>$500 IKEA Move-in Gift Card</h3>
                 <p>Complimentary $500 IKEA gift card delivered upon completion of your purchase.</p>
               </div>
             </div>
@@ -331,7 +341,7 @@
             <div class="incentive-row">
               <svg class="incentive-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
               <div class="incentive-content">
-                <h4>Pre-Delivery Inspection (PDI)</h4>
+                <h3>Pre-Delivery Inspection (PDI)</h3>
                 <p>Comprehensive guided walkthrough with the builder representative prior to handover.</p>
               </div>
             </div>
@@ -829,6 +839,31 @@
             </div>
           </section>
         </div>
+
+        <!-- Direct Listing Agent Card -->
+        <div class="agent-contact-box">
+          <div class="agent-header">
+            <div class="agent-avatar" aria-hidden="true">JS</div>
+            <div class="agent-info">
+              <h3>Jeffrey Shew</h3>
+              <p>Broker &middot; Lawrence Hill</p>
+            </div>
+          </div>
+          <div class="agent-links">
+            <a href="tel:16475032768" class="agent-link-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <span>Direct: 647-503-2768</span>
+            </a>
+            <a href="https://jeffreyshew.com" target="_blank" rel="noopener noreferrer" class="agent-link-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              <span>Official Site: Jeffreyshew.com</span>
+            </a>
+            <div class="agent-link-row" style="cursor: default;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>Open Daily: 11:00 AM &ndash; 6:00 PM</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Right Column: Sticky Tour Booking Sidebar & Contact -->
@@ -840,8 +875,6 @@
           <p class="booking-subtitle">Direct broker representation for private Model Suite 62 tours, pricing dossiers, and floor plan allocations.</p>
 
           <form id="lead-submit-form" class="booking-form" novalidate>
-            <input type="hidden" id="tour-date" name="tourDate" value="2026-10-16">
-            <input type="hidden" id="tour-time" name="tourTime" value="Flexible">
 
             <div class="form-group">
               <label for="lead-fullname" class="form-label">Full Name</label>
@@ -879,7 +912,7 @@
 
             <div class="form-group form-checkbox-group">
               <label for="lead-newsletter-optin" class="form-checkbox-label">
-                <input type="checkbox" id="lead-newsletter-optin" name="subscribeNewsletter" class="form-checkbox-input" checked>
+                <input type="checkbox" id="lead-newsletter-optin" name="subscribeNewsletter" class="form-checkbox-input">
                 <span class="form-checkbox-text">
                   Subscribe to Jeffrey Shew's Private Pre-Construction &amp; Investor Briefing (confidential releases, pricing dossiers &amp; market intelligence).
                 </span>
@@ -906,38 +939,13 @@
           </form>
         </div>
 
-        <!-- Direct Listing Agent Card -->
-        <div class="agent-contact-box">
-          <div class="agent-header">
-            <div class="agent-avatar" aria-hidden="true">JS</div>
-            <div class="agent-info">
-              <h4>Jeffrey Shew</h4>
-              <p>Broker &middot; Lawrence Hill</p>
-            </div>
-          </div>
-          <div class="agent-links">
-            <a href="tel:16475032768" class="agent-link-row">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-              <span>Direct: 647-503-2768</span>
-            </a>
-            <a href="https://jeffreyshew.com" target="_blank" rel="noopener noreferrer" class="agent-link-row">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-              <span>Official Site: Jeffreyshew.com</span>
-            </a>
-            <div class="agent-link-row" style="cursor: default;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              <span>Open Daily: 11:00 AM &ndash; 6:00 PM</span>
-            </div>
-          </div>
-        </div>
-
       </aside>
     </div>
 
     <!-- Frequently Asked Questions & Due Diligence (Positioned below the form) -->
     <section class="faq-section" id="faq-section" aria-labelledby="faq-heading">
       <div class="container">
-            <h3 id="faq-heading" class="section-headline" style="font-size: 1.375rem; margin-top: 28px;">Frequently Asked Questions &amp; Due Diligence</h3>
+            <h2 id="faq-heading" class="section-headline" style="font-size: 1.375rem;">Frequently Asked Questions &amp; Due Diligence</h2>
             <p class="section-intro-text">
               Essential answers regarding deposit terms, closing schedules, solid concrete construction, and neighborhood infrastructure at 73 Curlew Drive.
             </p>
@@ -1321,7 +1329,7 @@
           <!-- Add to Newsletter Checkbox -->
           <div class="form-group form-checkbox-group">
             <label for="oh-newsletter-optin" class="form-checkbox-label">
-              <input type="checkbox" id="oh-newsletter-optin" name="subscribeNewsletter" class="form-checkbox-input" checked>
+              <input type="checkbox" id="oh-newsletter-optin" name="subscribeNewsletter" class="form-checkbox-input">
               <span class="form-checkbox-text">
                 Subscribe to Jeffrey Shew's Private Pre-Construction &amp; Investor Briefing (confidential releases, pricing dossiers &amp; market intelligence).
               </span>
