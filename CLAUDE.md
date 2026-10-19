@@ -36,6 +36,7 @@ ssh root@187.124.86.103 "cd /root/jeffreyshew/campaigns/lawrencehill && docker c
 - Two routes, ONE form (the QR check-in modal) and ONE record per person (same email OR phone):
   - Pop-up button -> check-in modal (dismissable) -> source `Halloween RSVP (Open House form)`: pre-registered, CRM tag `Open House RSVP` + `Halloween RSVP`, then the dark confirmation screen with entry number `LH-HW-XXXXX`.
   - QR check-in at the venue on Oct 24-25 (Toronto time): registers AND marks attended; a pre-registered person scanning the QR is marked attended on the same record (no new lead, no second email).
+- Portal "Present" checkbox (staff-controlled, `presentAt` on the lead, live-synced, filterable, CSV column `Present`) is the source of truth for who attended; QR check-ins on Oct 24-25 tick it automatically. Draw the raffle from Present guests with a registration number.
 - Repeat attempts are not saved, not sent to the CRM, get no second email. Portal shows "Pre-registered" / "Attended" + entry number; CSV has Raffle Entry # and Raffle Status.
 - Confirmation email via SMTP (`SMTP_HOST/PORT/USER/PASS`, `MAIL_FROM` in the VPS `.env`, see `set-smtp.sh`); without them no email is sent and the page just shows the number.
 

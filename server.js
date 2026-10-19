@@ -442,8 +442,8 @@ app.post('/api/leads', (req, res) => {
       const ph = normPhone(phone);
       const prior = all.find((l) => l.raffleEntryId && (l.email === em || (ph.length >= 7 && normPhone(l.phone) === ph)));
       if (prior) {
-        if (attendedNow && !prior.raffleAttendedAt) {
-          prior.raffleAttendedAt = new Date().toISOString();
+        if (attendedNow && !prior.presentAt) {
+          prior.presentAt = new Date().toISOString();
           fs.writeFileSync(LEADS_FILE, JSON.stringify(all, null, 2), 'utf8');
           broadcastLeadUpdate(prior);
           return res.status(200).json({ success: true, checkedIn: true, raffle: { entryId: prior.raffleEntryId } });
@@ -504,7 +504,7 @@ app.post('/api/leads', (req, res) => {
       closingWindow: '30 to 90 Days',
       modelSuiteLocation: '73 Curlew Dr, Units 62 & 63',
       status: isOH ? 'OPEN_HOUSE_SIGNIN' : 'NEW_VIP_INQUIRY',
-      ...(raffleEntryId && { raffleEntryId, raffleEnrolledAt: new Date().toISOString(), ...(attendedNow && { raffleAttendedAt: new Date().toISOString() }) })
+      ...(raffleEntryId && { raffleEntryId, raffleEnrolledAt: new Date().toISOString(), ...(attendedNow && { presentAt: new Date().toISOString() }) })
     };
 
     // Durable atomic append to leads.json
@@ -731,6 +731,25 @@ app.patch('/api/openhouse/attendees/:id/source', requirePortalAuth, (req, res) =
 
 // 3. Private CSV Export
 // 4. Real-Time Push Stream (Server-Sent Events — Zero Polling Traffic)
+// Staff confirm who was physically at the open house (checkbox in the portal). Also set automatically
+// when someone checks in by QR on the event days. Unchecking removes it.
+app.patch('/api/openhouse/attendees/:id/present', requirePortalAuth, (req, res) => {
+  if (typeof req.body.present !== 'boolean') return res.status(400).json({ error: 'present must be true or false.' });
+  try {
+    const leads = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+    const lead = leads.find((l) => l.id === req.params.id);
+    if (!lead) return res.status(404).json({ error: 'Attendee not found.' });
+    if (req.body.present) lead.presentAt = lead.presentAt || new Date().toISOString();
+    else delete lead.presentAt;
+    fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2), 'utf8');
+    broadcastLeadUpdate(lead);
+    res.json({ success: true, id: lead.id, presentAt: lead.presentAt || null });
+  } catch (err) {
+    console.error('Error updating presence:', err);
+    res.status(500).json({ error: 'Failed to update.' });
+  }
+});
+
 app.get('/api/openhouse/stream', requirePortalAuth, (req, res) => {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -784,7 +803,7 @@ app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
       .filter(l => l.isOpenHouse === true || l.source === 'Open House QR Check-In' || l.status === 'OPEN_HOUSE_SIGNIN')
       .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
-    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Lead Source', 'Raffle Entry #', 'Raffle Status', 'Newsletter Opt-in', 'Lead ID', 'Status'];
+    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Lead Source', 'Raffle Entry #', 'Raffle Status', 'Present', 'Newsletter Opt-in', 'Lead ID', 'Status'];
     const csvRows = [headers.map(c => `"${c}"`).join(',')];
 
     for (const a of attendees) {
@@ -801,7 +820,8 @@ app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
         a.suiteInterest || 'Model Suite 62',
         a.leadSource || '',
         a.raffleEntryId || '',
-        a.raffleEntryId ? (a.raffleAttendedAt ? 'Attended' : 'Pre-registered') : '',
+        a.raffleEntryId ? (a.presentAt ? 'Attended' : 'Pre-registered') : '',
+        a.presentAt ? 'Yes' : '',
         a.subscribeNewsletter ? 'YES' : 'NO',
         a.id || '',
         a.status || 'OPEN_HOUSE_SIGNIN'
