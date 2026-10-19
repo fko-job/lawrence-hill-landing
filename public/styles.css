@@ -2531,49 +2531,7 @@ img {
   background: var(--color-ink-light);
 }
 
-/* --- Jeffrey Shew Buyer Advantage & Long-Tail FAQ --- */
-.buyer-advantage-section {
-  margin-top: 10px;
-}
-.buyer-advantage-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 14px;
-  margin-top: 16px;
-}
-.advantage-card {
-  padding: 18px 20px;
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xs);
-  display: flex;
-  flex-direction: column;
-  transition: border-color var(--transition-fast);
-}
-.advantage-card:hover {
-  border-color: var(--color-ink);
-}
-.advantage-badge {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-accent-dark);
-  margin-bottom: 6px;
-}
-.advantage-title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--color-ink);
-  margin-bottom: 8px;
-}
-.advantage-desc {
-  font-size: 0.8125rem;
-  color: var(--color-ink-muted);
-  line-height: 1.5;
-  margin: 0;
-}
-
+/* --- Long-Tail FAQ --- */
 .faq-section {
   padding: 48px 0 56px;
   border-top: 1px solid var(--color-border); /* taste-skill-ignore */
@@ -2803,12 +2761,6 @@ section, .editorial-section, [id], h1, h2, h3 {
   }
   .map-locations-sidebar {
     max-height: 280px !important;
-  }
-
-  /* Buyer Advantage Grid on Mobile */
-  .buyer-advantage-grid {
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
   }
 
   /* Generous Bottom Clearance for Sticky CTA */
