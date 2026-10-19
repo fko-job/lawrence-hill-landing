@@ -219,7 +219,7 @@ app.get('/api/inventory', (req, res) => {
 
 // --- Follow Up Boss CRM Integration ---
 const FUB_ENDPOINT = process.env.FUB_ENDPOINT || 'https://api.followupboss.com/v1/events';
-const FUB_API_KEY = process.env.FUB_API_KEY || 'fka_0qYWVXJLuT1EnjtUW96DGM44eZpU94xGkN';
+const FUB_API_KEY = process.env.FUB_API_KEY;
 const FUB_SYSTEM = process.env.FUB_SYSTEM || 'jeffreyshew-website';
 const FUB_ASSIGNED_USER_ID = process.env.FUB_ASSIGNED_USER_ID ? Number(process.env.FUB_ASSIGNED_USER_ID) : 1;
 const FUB_ASSIGNED_TO = process.env.FUB_ASSIGNED_TO || 'Jeffrey Shew';
@@ -583,11 +583,39 @@ app.get('/api/openhouse/attendees', requirePortalAuth, (req, res) => {
     res.json({
       success: true,
       count: attendees.length,
-      attendees
+      attendees,
+      sources: LEAD_SOURCES
     });
   } catch (err) {
     console.error('Error reading open house attendees:', err);
     res.status(500).json({ error: 'Failed to retrieve attendees.' });
+  }
+});
+
+// Editable "Source" per attendee (stored as leadSource; `source` is left alone because
+// the attendee filter and Follow Up Boss attribution depend on it).
+const LEAD_SOURCES = ['Instagram', 'Facebook', 'Google', 'Realtor Referral', 'Friend / Word of Mouth',
+  'Signage / Walk-by', 'Flyer / Mailer', 'Open House QR Poster', 'Other'];
+
+app.patch('/api/openhouse/attendees/:id/source', requirePortalAuth, (req, res) => {
+  const value = typeof req.body.leadSource === 'string' ? req.body.leadSource : '';
+  if (value !== '' && !LEAD_SOURCES.includes(value)) {
+    return res.status(400).json({ error: 'Invalid source.' });
+  }
+  try {
+    const leads = JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+    const lead = leads.find(l => l.id === req.params.id);
+    if (!lead) return res.status(404).json({ error: 'Attendee not found.' });
+    lead.leadSource = value;
+    fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2), 'utf8');
+    const payload = `data: ${JSON.stringify({ type: 'source_updated', id: lead.id, leadSource: value })}\n\n`;
+    for (const client of sseClients) {
+      try { client.write(payload); } catch (e) { sseClients.delete(client); }
+    }
+    res.json({ success: true, id: lead.id, leadSource: value });
+  } catch (err) {
+    console.error('Error updating lead source:', err);
+    res.status(500).json({ error: 'Failed to update source.' });
   }
 });
 
@@ -616,7 +644,7 @@ app.get('/api/openhouse/stream', requirePortalAuth, (req, res) => {
     .filter(l => l.isOpenHouse === true || l.source === 'Open House QR Check-In' || l.status === 'OPEN_HOUSE_SIGNIN')
     .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
-  res.write(`data: ${JSON.stringify({ type: 'init', attendees })}\n\n`);
+  res.write(`data: ${JSON.stringify({ type: 'init', attendees, sources: LEAD_SOURCES })}\n\n`);
   sseClients.add(res);
 
   // Keep-alive heartbeat every 25 seconds
@@ -646,7 +674,7 @@ app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
       .filter(l => l.isOpenHouse === true || l.source === 'Open House QR Check-In' || l.status === 'OPEN_HOUSE_SIGNIN')
       .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
-    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Newsletter Opt-in', 'Lead ID', 'Status'];
+    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Lead Source', 'Newsletter Opt-in', 'Lead ID', 'Status'];
     const csvRows = [headers.map(c => `"${c}"`).join(',')];
 
     for (const a of attendees) {
@@ -661,6 +689,7 @@ app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
         a.timeline || 'Immediate',
         a.budgetRange || '',
         a.suiteInterest || 'Model Suite 62',
+        a.leadSource || '',
         a.subscribeNewsletter ? 'YES' : 'NO',
         a.id || '',
         a.status || 'OPEN_HOUSE_SIGNIN'

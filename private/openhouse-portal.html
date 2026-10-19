@@ -279,6 +279,8 @@
       cursor: pointer;
     }
 
+    .source-select { min-height: 36px; padding: 6px 10px; min-width: 150px; max-width: 100%; }
+
     .select-filter:focus {
       border-color: var(--color-copper);
     }
@@ -615,6 +617,7 @@
             <th>Representation</th>
             <th>Purchasing Timeline</th>
             <th>Budget &amp; Suite</th>
+            <th>Source</th>
             <th>Briefing</th>
             <th>Quick Actions</th>
           </tr>
@@ -688,6 +691,33 @@
     }
 
     // Live Toast Notification
+    let leadSources = [];
+
+    function sourceSelect(a) {
+      const opts = ['<option value="">Select source…</option>'].concat(
+        leadSources.map(s => `<option value="${escapeHtml(s)}"${a.leadSource === s ? ' selected' : ''}>${escapeHtml(s)}</option>`)
+      ).join('');
+      return `<select class="select-filter source-select" data-id="${escapeHtml(a.id)}" data-prev="${escapeHtml(a.leadSource || '')}" onchange="setSource(this)">${opts}</select>`;
+    }
+
+    async function setSource(el) {
+      const id = el.dataset.id, value = el.value, prev = el.dataset.prev;
+      try {
+        const res = await fetch(getApiUrl('/api/openhouse/attendees/' + encodeURIComponent(id) + '/source'), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ leadSource: value })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const lead = allAttendees.find(a => a.id === id);
+        if (lead) lead.leadSource = value;
+        el.dataset.prev = value;
+      } catch (err) {
+        el.value = prev;
+        showLiveToast('Could not save source. Try again.');
+      }
+    }
+
     function showLiveToast(msg) {
       const toast = document.getElementById('live-toast');
       const toastText = document.getElementById('toast-text');
@@ -728,8 +758,12 @@
           const payload = JSON.parse(event.data);
           if (payload.type === 'init') {
             allAttendees = Array.isArray(payload.attendees) ? payload.attendees : [];
+            leadSources = payload.sources || leadSources;
             updateKPIs(allAttendees);
             render();
+          } else if (payload.type === 'source_updated') {
+            const lead = allAttendees.find(a => a.id === payload.id);
+            if (lead && lead.leadSource !== payload.leadSource) { lead.leadSource = payload.leadSource; render(); }
           } else if (payload.type === 'new_attendee') {
             const attendee = payload.attendee;
             if (attendee && !allAttendees.some(a => a.id === attendee.id)) {
@@ -763,6 +797,7 @@
         const data = await res.json();
         
         allAttendees = Array.isArray(data.attendees) ? data.attendees : [];
+        leadSources = data.sources || leadSources;
         updateKPIs(allAttendees);
         render();
         syncStatus.textContent = 'Live Push Active';
@@ -869,6 +904,7 @@
               <div style="font-weight: 600; font-size: 0.825rem;">${escapeHtml(a.budgetRange || '$550K–$600K')}</div>
               <div style="font-size: 0.725rem; color: var(--color-ink-muted);">${escapeHtml(a.suiteInterest || 'Model Suite 62')}</div>
             </td>
+            <td>${sourceSelect(a)}</td>
             <td>
               ${a.subscribeNewsletter ? '<span class="badge badge-direct">Opted-In</span>' : '<span class="badge badge-neutral">No</span>'}
             </td>
@@ -932,6 +968,10 @@
               <div>
                 <span style="color: var(--color-ink-muted);">Phone:</span>
                 <div>${escapeHtml(a.phone || '')}</div>
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <span style="color: var(--color-ink-muted);">Source:</span>
+                <div>${sourceSelect(a)}</div>
               </div>
             </div>
             <div class="card-actions">
