@@ -1,5 +1,7 @@
 # Lawrence Hill Urban Towns: landing page + open-house portal
 
+**Start with `HANDOFF.md`** (current state, open items, how we work), then the rules below.
+
 Node/Express app (`server.js`, `public/`, `private/`), Docker, behind Traefik on a Hostinger VPS.
 
 ## Repo and branches

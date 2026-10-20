@@ -27,4 +27,4 @@ try { await t.verify(); console.log("Login accepted."); } catch (e) { console.er
 printf '%s\n%s\n%s\n%s\n%s\n' "$HOST" "$PORT" "$USER_" "$PASS" "$FROM" | ssh "$VPS" "f=$REMOTE_ENV; cp \$f \$f.bak; chmod 600 \$f.bak; read -r h; read -r p; read -r u; read -r w; read -r m; { grep -v -E '^(SMTP_HOST|SMTP_PORT|SMTP_USER|SMTP_PASS|MAIL_FROM)=' \$f || true; printf 'SMTP_HOST=%s\nSMTP_PORT=%s\nSMTP_USER=%s\nSMTP_PASS=%s\nMAIL_FROM=%s\n' \"\$h\" \"\$p\" \"\$u\" \"\$w\" \"\$m\"; } > \$f.tmp && chmod 600 \$f.tmp && mv \$f.tmp \$f"
 
 echo "OK: saved to $REMOTE_ENV (mailbox $USER_). Backup: $REMOTE_ENV.bak"
-echo "Not restarted. Restart when ready: ssh $VPS 'cd /root/jeffreyshew/campaigns/lawrencehill && docker compose up -d --build'"
+echo "Not restarted. Restart when ready: ssh $VPS 'cd /root/jeffreyshew/campaigns/lawrencehill && docker compose up -d --force-recreate'"
