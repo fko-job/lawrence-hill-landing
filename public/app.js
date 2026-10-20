@@ -1282,6 +1282,11 @@ function initHalloweenPopup() {
   const sp = new URLSearchParams(window.location.search);
   if (sp.has("openhouse") || window.location.hash === "#open-house" || window.location.hash === "#openhouse") return; // QR guests already see the check-in
   if (Date.now() >= Date.parse("2026-10-26T00:00:00-04:00")) return; // open house is over
+  if (sp.has("register")) { // came from the jeffreyshew.com pop-up: straight to the closable check-in form
+    try { sessionStorage.setItem("hwSeen", "1"); } catch (e) {}
+    setTimeout(() => document.dispatchEvent(new CustomEvent("open-house:open")), 120);
+    return;
+  }
   try { if (sessionStorage.getItem("hwSeen")) return; } catch (e) {}
   if (hwRegistered()) return; // already registered here: no promo, no second entry
 
