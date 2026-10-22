@@ -9,6 +9,7 @@ function getApiUrl(path) {
 // Editorial gallery engine, plan inspector, and 2-step tour reservation flow
 
 document.addEventListener('DOMContentLoaded', () => {
+  captureArrival();
   initSubNavTabs();
   initInteractiveMap();
   initFaqAccordion();
@@ -257,6 +258,7 @@ function initBookingForm() {
       suiteInterest: suitePreference,
       subscribeNewsletter: subscribeNewsletter,
       source: "Direct Contact Form",
+      ...arrivalInfo(),
       timestamp: new Date().toISOString()
     };
 
@@ -1006,6 +1008,7 @@ function initPriceSheetModal() {
         suiteInterest: suiteInterest,
         requestIncentives: true,
         source: "VIP Price Sheet Download Modal",
+        ...arrivalInfo(),
         timestamp: new Date().toISOString()
       };
 
@@ -1205,6 +1208,7 @@ function initOpenHouseSign() {
         subscribeNewsletter,
         isOpenHouse: true,
         source: promoMode ? "Halloween RSVP (Open House form)" : "Open House QR Check-In",
+        ...arrivalInfo(),
         timestamp: new Date().toISOString()
       };
 
@@ -1354,4 +1358,26 @@ function showHwConfirm({ name, entryId, email, emailing, duplicate }) {
   box.querySelectorAll("[data-hwc-close]").forEach((el) => el.addEventListener("click", close, { once: true }));
   box.addEventListener("keydown", onKey);
   done.focus();
+}
+
+// --- How the visitor arrived: eblast, jeffreyshew.com pop-up, QR, or the page itself. A tagged arrival replaces an older one. ---
+const ARRIVAL_KEY = "lhArrival";
+function captureArrival() {
+  const sp = new URLSearchParams(window.location.search);
+  const utm = {};
+  ["utm_source", "utm_medium", "utm_campaign"].forEach((k) => { if (sp.get(k)) utm[k] = sp.get(k).slice(0, 60); });
+  let channel = null;
+  if (sp.has("openhouse") || /^#open-?house$/.test(window.location.hash)) channel = "QR at the venue";
+  else if (sp.has("register")) channel = "jeffreyshew.com pop-up";
+  else if (utm.utm_medium === "email") channel = "Eblast";
+  else if (Object.keys(utm).length) channel = "Other campaign";
+  try {
+    const old = localStorage.getItem(ARRIVAL_KEY);
+    if (channel) localStorage.setItem(ARRIVAL_KEY, JSON.stringify({ channel, utm }));
+    else if (!old) localStorage.setItem(ARRIVAL_KEY, JSON.stringify({ channel: "Landing page", utm: {} }));
+  } catch (e) {}
+}
+function arrivalInfo() {
+  try { const a = JSON.parse(localStorage.getItem(ARRIVAL_KEY) || "null"); if (a && a.channel) return a; } catch (e) {}
+  return { channel: "Landing page", utm: {} };
 }

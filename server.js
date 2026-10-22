@@ -338,6 +338,9 @@ app.post("/api/newsletter", (req, res) => {
 // --- Halloween open house raffle: one registration per person + confirmation email ---
 const RAFFLE_FROM = Date.parse('2026-10-24T00:00:00-04:00'); // open house days, Toronto time
 const RAFFLE_TO = Date.parse('2026-10-26T00:00:00-04:00');
+// How the visitor arrived (sent by the page; unknown values are ignored)
+const CHANNELS = ['Eblast', 'jeffreyshew.com pop-up', 'Landing page', 'QR at the venue', 'Other campaign'];
+const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign'];
 const normPhone = (p) => String(p || '').replace(/\D/g, '').slice(-10);
 const ENTRY_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function newEntryId(leads) {
@@ -413,7 +416,9 @@ app.post('/api/leads', (req, res) => {
       notes,
       subscribeNewsletter,
       isOpenHouse,
-      source
+      source,
+      channel,
+      utm
     } = req.body;
 
     const resolvedFullName = (fullName || `${inputFirstName || ''} ${inputLastName || ''}`).trim();
@@ -425,6 +430,10 @@ app.post('/api/leads', (req, res) => {
     const isOH = Boolean(isOpenHouse) || (source && source.includes('Open House'));
     const chosenSuite = suitePreference || suiteInterest || 'Model Suite 62 (2 Bed · 781 SF · $569K)';
     const isSubscribedNewsletter = Boolean(subscribeNewsletter);
+
+    const leadChannel = CHANNELS.includes(channel) ? channel : (source === 'Open House QR Check-In' ? 'QR at the venue' : undefined);
+    const cleanUtm = {};
+    for (const k of UTM_KEYS) if (utm && typeof utm[k] === 'string' && utm[k].trim()) cleanUtm[k] = utm[k].trim().slice(0, 60);
 
     // Halloween raffle: ONE record per person (same email or phone) shared by both entry routes:
     //  - pop-up registration ("Halloween RSVP...", before the event) = registered
@@ -475,6 +484,7 @@ app.post('/api/leads', (req, res) => {
     
     if (isPopupRsvp) tags = tags.map((t) => (t === 'Open House Attendee' ? 'Open House RSVP' : t));
     if (raffleEntryId) tags.push('Halloween RSVP');
+    if (leadChannel) tags.push('Channel: ' + leadChannel);
 
     // Tag identifying newsletter subscription:
     if (isSubscribedNewsletter) {
@@ -504,6 +514,8 @@ app.post('/api/leads', (req, res) => {
       closingWindow: '30 to 90 Days',
       modelSuiteLocation: '73 Curlew Dr, Units 62 & 63',
       status: isOH ? 'OPEN_HOUSE_SIGNIN' : 'NEW_VIP_INQUIRY',
+      ...(leadChannel && { channel: leadChannel }),
+      ...(Object.keys(cleanUtm).length && { utm: cleanUtm }),
       ...(raffleEntryId && { raffleEntryId, raffleEnrolledAt: new Date().toISOString(), ...(attendedNow && { presentAt: new Date().toISOString() }) })
     };
 
@@ -803,7 +815,7 @@ app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
       .filter(l => l.isOpenHouse === true || l.source === 'Open House QR Check-In' || l.status === 'OPEN_HOUSE_SIGNIN')
       .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 
-    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Lead Source', 'Raffle Entry #', 'Raffle Status', 'Present', 'Newsletter Opt-in', 'Lead ID', 'Status'];
+    const headers = ['Date', 'Time (UTC)', 'Full Name', 'Email', 'Phone', 'Realtor Representation', 'Purchasing Timeline', 'Budget Range', 'Suite Interest', 'Lead Source', 'Channel', 'Campaign', 'Raffle Entry #', 'Raffle Status', 'Present', 'Newsletter Opt-in', 'Lead ID', 'Status'];
     const csvRows = [headers.map(c => `"${c}"`).join(',')];
 
     for (const a of attendees) {
@@ -819,6 +831,8 @@ app.get('/api/openhouse/export-csv', requirePortalAuth, (req, res) => {
         a.budgetRange || '',
         a.suiteInterest || 'Model Suite 62',
         a.leadSource || '',
+        a.channel || '',
+        (a.utm && a.utm.utm_campaign) || '',
         a.raffleEntryId || '',
         a.raffleEntryId ? (a.presentAt ? 'Attended' : 'Pre-registered') : '',
         a.presentAt ? 'Yes' : '',

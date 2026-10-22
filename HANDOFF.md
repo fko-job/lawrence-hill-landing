@@ -29,7 +29,12 @@ The landing page, the Halloween open house pop-up/raffle, and the private open h
 **Portal** (`/lawrence-hill/openhouse-portal`, HTTP Basic auth, user `jeffrey`; password only in the VPS `.env`, user changed it today)
 - Source dropdown per guest (stored as `leadSource`; the original `source` field is untouched because filters/CRM depend on it).
 - **Present** checkbox per guest (staff-controlled `presentAt`; live-synced; filter; "N present" count; CSV column). This is the source of truth for who attended. Badges: Pre-registered / Attended + entry number.
+- **How they arrived (channel):** the page remembers the visitor's arrival in localStorage `lhArrival` (a tagged link replaces an older one; untagged returns keep it) and sends `channel` + `utm` with every lead. Channels: `Eblast` (`utm_medium=email`), `jeffreyshew.com pop-up` (`?register`), `QR at the venue` (`?openhouse`/`#open-house`), `Other campaign` (any other utm), `Landing page` (default). Server validates against a whitelist, stores `channel`/`utm`, tags the CRM lead `Channel: <name>`. Portal: "via <channel>" badge, channel filter, "By channel" counts; CSV columns Channel + Campaign. Eblast links must keep `utm_medium=email`. Leads from before this change show as Unknown.
 - CSV export columns added: Lead Source, Raffle Entry #, Raffle Status, Present.
+
+## Facts about the client to respect
+
+- Jeffrey Shew is a **broker sales representative**, NOT the broker of record or team lead. Never write "broker of record" or "team lead" for him (none left in the site or the eblast as of 2026-10-20). "Broker" as his title on the site is fine.
 
 ## Open items (nothing here is done)
 

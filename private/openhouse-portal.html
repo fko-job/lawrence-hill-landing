@@ -604,14 +604,24 @@
           <option value="Represented">Working with Realtor</option>
           <option value="Realtor">Licensed Realtor Attending</option>
         </select>
+        <select id="filter-channel" class="select-filter" aria-label="Filter by how they arrived">
+          <option value="">All Channels</option>
+          <option value="Eblast">Eblast</option>
+          <option value="QR at the venue">QR at the venue</option>
+          <option value="jeffreyshew.com pop-up">jeffreyshew.com pop-up</option>
+          <option value="Landing page">Landing page</option>
+          <option value="Other campaign">Other campaign</option>
+          <option value="Unknown">Unknown</option>
+        </select>
         <select id="filter-present" class="select-filter" aria-label="Filter by presence">
           <option value="">All Guests</option>
           <option value="yes">Present</option>
           <option value="no">Not Marked Present</option>
         </select>
       </div>
-      <div style="font-size: 0.8rem; color: var(--color-ink-muted);" id="results-count">
-        Showing all attendees
+      <div style="font-size: 0.8rem; color: var(--color-ink-muted);">
+        <div id="results-count">Showing all attendees</div>
+        <div id="channel-summary"></div>
       </div>
     </div>
 
@@ -726,10 +736,15 @@
     }
 
     // Halloween raffle: pre-registered via the pop-up, or attended (checked in by QR at the venue)
+    // Where the guest came from (eblast, QR at the venue, jeffreyshew.com pop-up, landing page)
+    function channelBadge(a) {
+      return a.channel ? `<div style="margin-top:4px"><span class="badge badge-neutral">via ${escapeHtml(a.channel)}</span></div>` : '';
+    }
+
     function raffleBadge(a) {
-      if (!a.raffleEntryId) return '';
+      if (!a.raffleEntryId) return channelBadge(a);
       const attended = Boolean(a.presentAt);
-      return `<div style="margin-top:4px"><span class="badge ${attended ? 'badge-direct' : 'badge-neutral'}">${attended ? 'Attended' : 'Pre-registered'} &middot; ${escapeHtml(a.raffleEntryId)}</span></div>`;
+      return `<div style="margin-top:4px"><span class="badge ${attended ? 'badge-direct' : 'badge-neutral'}">${attended ? 'Attended' : 'Pre-registered'} &middot; ${escapeHtml(a.raffleEntryId)}</span></div>` + channelBadge(a);
     }
 
     function sourceSelect(a) {
@@ -874,6 +889,7 @@
       const fTimeline = document.getElementById('filter-timeline').value.toLowerCase();
       const fRealtor = document.getElementById('filter-realtor').value.toLowerCase();
       const fPresent = document.getElementById('filter-present').value;
+      const fChannel = document.getElementById('filter-channel').value;
 
       const filtered = allAttendees.filter(a => {
         const nameMatch = (a.fullName || '').toLowerCase().includes(q);
@@ -887,12 +903,16 @@
         const realtorStr = (a.realtorStatus || '').toLowerCase();
         if (fRealtor && !realtorStr.includes(fRealtor)) return false;
 
+        if (fChannel && (a.channel || 'Unknown') !== fChannel) return false;
         if (fPresent === 'yes' && !a.presentAt) return false;
         if (fPresent === 'no' && a.presentAt) return false;
 
         return true;
       });
 
+      const byChannel = {};
+      allAttendees.forEach(a => { const c = a.channel || 'Unknown'; byChannel[c] = (byChannel[c] || 0) + 1; });
+      document.getElementById('channel-summary').textContent = 'By channel: ' + Object.entries(byChannel).sort((x, y) => y[1] - x[1]).map(([c, n]) => `${c} ${n}`).join(' · ');
       document.getElementById('results-count').textContent = `Showing ${filtered.length} of ${allAttendees.length} check-ins · ${allAttendees.filter(a => a.presentAt).length} present`;
 
       renderTable(filtered);
@@ -1044,6 +1064,7 @@
     document.getElementById('filter-timeline').addEventListener('change', render);
     document.getElementById('filter-realtor').addEventListener('change', render);
     document.getElementById('filter-present').addEventListener('change', render);
+    document.getElementById('filter-channel').addEventListener('change', render);
     document.getElementById('btn-refresh').addEventListener('click', () => {
       loadAttendees();
     });
