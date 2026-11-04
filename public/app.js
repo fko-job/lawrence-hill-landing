@@ -1207,7 +1207,7 @@ function initOpenHouseSign() {
         suiteInterest: `Open House Sign-In (${timeline} · ${budgetRange})`,
         subscribeNewsletter,
         isOpenHouse: true,
-        source: promoMode ? "Halloween RSVP (Open House form)" : "Open House QR Check-In",
+        source: promoMode ? "Open House RSVP (Nov 7-8)" : "Open House QR Check-In",
         ...arrivalInfo(),
         timestamp: new Date().toISOString()
       };
@@ -1246,7 +1246,8 @@ function initOpenHouseSign() {
       if (raffle || duplicate || checkedIn) {
         try { if (raffle || !hwRegistered()) localStorage.setItem(HW_STORE, JSON.stringify({ entryId: (raffle || {}).entryId, name: fullName, at: Date.now() })); } catch (e) {}
       }
-      if (promoMode && (raffle || duplicate)) {
+      if (promoMode) {
+        try { localStorage.setItem(OH_STORE, "1"); } catch (e) {}
         dismissPromo(); // pre-registration is done: show the confirmation screen, not the on-site "access granted" view
         form.reset();
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Complete Check-In & View Floor Plans"; }
@@ -1285,12 +1286,12 @@ function initHalloweenPopup() {
   if (!pop) return;
   const sp = new URLSearchParams(window.location.search);
   if (sp.has("openhouse") || window.location.hash === "#open-house" || window.location.hash === "#openhouse") return; // QR guests already see the check-in
-  if (Date.now() >= Date.parse("2026-10-26T00:00:00-04:00")) return; // open house is over
   if (sp.has("register")) { // came from the jeffreyshew.com pop-up: straight to the closable check-in form
     try { sessionStorage.setItem("hwSeen", "1"); } catch (e) {}
     setTimeout(() => document.dispatchEvent(new CustomEvent("open-house:open")), 120);
     return;
   }
+  if (Date.now() >= Date.parse("2026-10-26T00:00:00-04:00")) return; // Halloween open house is over
   try { if (sessionStorage.getItem("hwSeen")) return; } catch (e) {}
   if (hwRegistered()) return; // already registered here: no promo, no second entry
 
@@ -1330,6 +1331,7 @@ function initHalloweenPopup() {
 
 // --- Halloween registration confirmation screen + "already registered in this browser" memory ---
 const HW_STORE = "lhHwRegistration";
+const OH_STORE = "lhOhRegistration-2026-11"; // read by the jeffreyshew.com open house pop-up
 function hwRegistered() {
   try { return JSON.parse(localStorage.getItem(HW_STORE) || "null"); } catch (e) { return null; }
 }
@@ -1340,14 +1342,14 @@ function showHwConfirm({ name, entryId, email, emailing, duplicate }) {
   const known = entryId || (hwRegistered() || {}).entryId;
   document.getElementById("hwc-title").textContent = duplicate ? "You're already registered" : "You're registered";
   document.getElementById("hwc-lead").textContent = duplicate
-    ? (first ? first + ", t" : "T") + "his email or phone is already registered for the Halloween Open House. Each person can register once."
-    : "Thank you" + (first ? ", " + first : "") + ". See you at the Halloween Open House.";
+    ? (first ? first + ", t" : "T") + "his email or phone is already registered for the open house. Each person can register once."
+    : "Thank you" + (first ? ", " + first : "") + ". See you at the open house.";
   const entry = document.getElementById("hwc-entry");
   entry.textContent = known || "";
   document.getElementById("hwc-entry-row").hidden = !known;
   document.getElementById("hwc-mail").textContent = duplicate
     ? "Please check your inbox for your confirmation."
-    : (emailing && email ? "A confirmation is on its way to " + email + "." : "Please keep your registration number.");
+    : (emailing && email ? "A confirmation is on its way to " + email + "." : known ? "Please keep your registration number." : "");
   const promo = document.getElementById("halloween-popup");
   if (promo) promo.hidden = true; // never stack the promo under the confirmation
   box.hidden = false;

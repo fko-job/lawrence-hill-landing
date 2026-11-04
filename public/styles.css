@@ -3455,3 +3455,16 @@ section, .editorial-section, [id], h1, h2, h3 {
 .oh-error { font-size: 0.875rem; font-weight: 600; color: #9b1c1c; margin-bottom: 10px; }
 .oh-error[hidden] { display: none; }
 .oh-raffle-box { font-size: 0.9375rem; line-height: 1.5; color: var(--color-ink); background: var(--color-accent-light); padding: 12px 14px; border-radius: var(--radius-xs); margin: 0 0 14px; text-align: left; }
+
+/* Open house confirmation: light card in the page palette (the dark Halloween look is retired) */
+.hw-card-confirm { background: #fff; color: var(--color-ink); }
+.hwc-list > div[hidden] { display: none; }
+.hw-card-confirm .hw-title, .hw-card-confirm .hwc-lead, .hw-card-confirm .hwc-list dd { color: var(--color-ink); }
+.hw-card-confirm .hwc-list dt, .hw-card-confirm .hwc-mail { color: var(--color-ink-muted); }
+.hw-card-confirm .hwc-check circle { fill: var(--color-accent); }
+.hw-card-confirm .hwc-check path { stroke: #fff; }
+.hw-card-confirm .hwc-list dd.hwc-entry { color: var(--color-accent-dark); }
+.hw-card-confirm .hw-cta { background: var(--color-accent); color: #fff; }
+.hw-card-confirm .hw-cta:hover { background: var(--color-accent-dark); }
+.hw-card-confirm .hw-close { background: var(--color-surface-alt, #f6f3ee); }
+.hw-card-confirm .hw-cta:focus-visible, .hw-card-confirm .hw-close:focus-visible { outline-color: var(--color-ink); }

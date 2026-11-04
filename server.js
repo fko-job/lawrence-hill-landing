@@ -482,7 +482,8 @@ app.post('/api/leads', (req, res) => {
       }
     }
     
-    if (isPopupRsvp) tags = tags.map((t) => (t === 'Open House Attendee' ? 'Open House RSVP' : t));
+    const isRsvp = isPopupRsvp || (typeof source === 'string' && source.startsWith('Open House RSVP')); // registered ahead, not attended
+    if (isRsvp) tags = tags.map((t) => (t === 'Open House Attendee' ? 'Open House RSVP' : t));
     if (raffleEntryId) tags.push('Halloween RSVP');
     if (leadChannel) tags.push('Channel: ' + leadChannel);
 
